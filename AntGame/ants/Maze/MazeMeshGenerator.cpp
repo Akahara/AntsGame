@@ -13,7 +13,24 @@ Renderer::Mesh MazeMeshGenerator::generateMazeMesh(const Maze &maze)
 
 	std::vector<Renderer::Vertex> verticies;
 	std::vector<unsigned int> indicies;
+
+	constexpr float WALL_SIZE = 5.f;
+	constexpr float WALL_HEIGHT = 30.F;
+	constexpr float CORRIDOR_SPACE = 20.F;
 	
+	/*
+	* float s3 = std::sqrtf(3);
+  std::vector<Vertex> vertices{
+    // position              uv            normal            // tex id          // color
+    { { -.5f, -.5f, -.5f }, { 0.f, 0.f }, { -s3, -s3, -s3 }, (float)texId, {1.0f, 1.0f, 0.0f}, },
+    { { +.5f, -.5f, -.5f }, { 1.f, 0.f }, { +s3, -s3, -s3 }, (float)texId, {1.0f, 1.0f, 0.0f}, },
+    { { +.5f, +.5f, -.5f }, { 1.f, 1.f }, { +s3, +s3, -s3 }, (float)texId, {1.0f, 1.0f, 0.0f}, },
+    { { -.5f, +.5f, -.5f }, { 0.f, 1.f }, { -s3, +s3, -s3 }, (float)texId, {1.0f, 1.0f, 0.0f}, },
+    { { -.5f, -.5f, +.5f }, { 0.f, 1.f }, { -s3, -s3, +s3 }, (float)texId, {1.0f, 1.0f, 0.0f}, },
+    { { +.5f, -.5f, +.5f }, { 1.f, 1.f }, { +s3, -s3, +s3 }, (float)texId, {1.0f, 1.0f, 0.0f}, },
+    { { +.5f, +.5f, +.5f }, { 1.f, 0.f }, { +s3, +s3, +s3 }, (float)texId, {1.0f, 1.0f, 0.0f}, },
+    { { -.5f, +.5f, +.5f }, { 0.f, 0.f }, { -s3, +s3, +s3 }, (float)texId, {1.0f, 1.0f, 0.0f} },
+	*/
 	float s3 = std::sqrtf(3);
 	// Generate a bunch of pillars
 	for (unsigned int y = 0; y < height + 1; y++) {
@@ -34,40 +51,44 @@ Renderer::Mesh MazeMeshGenerator::generateMazeMesh(const Maze &maze)
 
 			auto firstIndice = 8 * y * (width + 1) + 8 * x;
 
-			
-			indicies.push_back(firstIndice);
+			// Back face
 			indicies.push_back(firstIndice+1);
-			indicies.push_back(firstIndice+5);
-			indicies.push_back(firstIndice+5);
-			indicies.push_back(firstIndice+4);
 			indicies.push_back(firstIndice);
+			indicies.push_back(firstIndice+5);
+			indicies.push_back(firstIndice+5);
+			indicies.push_back(firstIndice);
+			indicies.push_back(firstIndice+4);
 
-			indicies.push_back(firstIndice);
+			// Left face
 			indicies.push_back(firstIndice+4);
-			indicies.push_back(firstIndice+7);
+			indicies.push_back(firstIndice);
 			indicies.push_back(firstIndice+7);
 			indicies.push_back(firstIndice+3);
+			indicies.push_back(firstIndice+7);
 			indicies.push_back(firstIndice);
 
-			indicies.push_back(firstIndice+1);
+			// Right face
 			indicies.push_back(firstIndice+5);
 			indicies.push_back(firstIndice+6);
+			indicies.push_back(firstIndice+1);
 			indicies.push_back(firstIndice+6);
 			indicies.push_back(firstIndice+2);
 			indicies.push_back(firstIndice+1);
 
+			// Front face
 			indicies.push_back(firstIndice+3);
 			indicies.push_back(firstIndice+2);
 			indicies.push_back(firstIndice+6);
-			indicies.push_back(firstIndice+6);
 			indicies.push_back(firstIndice+7);
 			indicies.push_back(firstIndice+3);
-
-			indicies.push_back(firstIndice+4);
-			indicies.push_back(firstIndice+5);
 			indicies.push_back(firstIndice+6);
+
+			// Top
+			indicies.push_back(firstIndice+5);
+			indicies.push_back(firstIndice+4);
 			indicies.push_back(firstIndice+6);
 			indicies.push_back(firstIndice+7);
+			indicies.push_back(firstIndice+6);
 			indicies.push_back(firstIndice+4);
 			
 
@@ -87,18 +108,18 @@ Renderer::Mesh MazeMeshGenerator::generateMazeMesh(const Maze &maze)
 
 		// -- North face
 
-		indicies.push_back(pillar_base_top_right + 5);
 		indicies.push_back(pillar_base_top_right + 8);
 		indicies.push_back(pillar_base_top_right + 1);
+		indicies.push_back(pillar_base_top_right + 5);
 
 		indicies.push_back(pillar_base_top_right + 12);
-		indicies.push_back(pillar_base_top_right + 5);
 		indicies.push_back(pillar_base_top_right + 8);
+		indicies.push_back(pillar_base_top_right + 5);
 
 		// -- South face
 
-		indicies.push_back(pillar_base_top_right + 6);
 		indicies.push_back(pillar_base_top_right + 15);
+		indicies.push_back(pillar_base_top_right + 6);
 		indicies.push_back(pillar_base_top_right + 11);
 
 		indicies.push_back(pillar_base_top_right + 6);
@@ -107,13 +128,13 @@ Renderer::Mesh MazeMeshGenerator::generateMazeMesh(const Maze &maze)
 
 		// -- Top face, not necessary but why not
 
-		indicies.push_back(pillar_base_top_right + 5);
 		indicies.push_back(pillar_base_top_right + 6);
 		indicies.push_back(pillar_base_top_right + 15);
+		indicies.push_back(pillar_base_top_right + 5);
 
 		indicies.push_back(pillar_base_top_right + 5);
-		indicies.push_back(pillar_base_top_right + 12);
 		indicies.push_back(pillar_base_top_right + 15);
+		indicies.push_back(pillar_base_top_right + 12);
 
 
 	};
@@ -126,9 +147,9 @@ Renderer::Mesh MazeMeshGenerator::generateMazeMesh(const Maze &maze)
 		// -- Top face, not necessary but why not
 
 		
-		indicies.push_back(pillar_base_top_right + 6);
 		indicies.push_back(pillar_base_top_right + 7);
 		indicies.push_back(pillar_base_top_right + 4 + stride);
+		indicies.push_back(pillar_base_top_right + 6);
 
 		indicies.push_back(pillar_base_top_right + 4 + stride);
 		indicies.push_back(pillar_base_top_right + 5 + stride);
@@ -147,12 +168,12 @@ Renderer::Mesh MazeMeshGenerator::generateMazeMesh(const Maze &maze)
 
 		// -- West face
 		
-		indicies.push_back(pillar_base_top_right + 7);
 		indicies.push_back(pillar_base_top_right + 4 + stride);
+		indicies.push_back(pillar_base_top_right + 7);
 		indicies.push_back(pillar_base_top_right + stride);
 
-		indicies.push_back(pillar_base_top_right + stride);
 		indicies.push_back(pillar_base_top_right + 3);
+		indicies.push_back(pillar_base_top_right + stride);
 		indicies.push_back(pillar_base_top_right + 7);
 	
 

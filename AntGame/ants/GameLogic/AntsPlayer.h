@@ -11,10 +11,16 @@ class AntsPlayer : public Player
 private:
     Renderer::Mesh m_mesh = Renderer::createCubeMesh();
 
+
+	bool m_enableTPS;
+
+	Renderer::Mesh m_mesh = Renderer::createCubeMesh();
+	glm::uvec2 m_tile;
+
     struct ThirdPersonParams {
         Renderer::Camera camera;
         glm::vec3 playerForward;
-        float distanceFromSubject = 4.f;
+        glm::vec3 distanceFromSubject = { 5,1.4,5 };
         float cameraHeight = 2.f;
         const Maze *maze = nullptr; // not owned, used to avoid moving the camera into a wall
     } m_tps;
@@ -160,6 +166,25 @@ public:
         if((nextY-rayOrigin.y)*(nextY-rayOrigin.y) + (xAtNextY-rayOrigin.x)*(xAtNextY-rayOrigin.x) >= hitDistanceSquared)
           break;
 
+	}
+
+	void updateCamera() override {
+		if (m_enableTPS) {
+			m_tps.camera.recalculateViewMatrix();
+			m_tps.camera.recalculateViewProjectionMatrix();
+		}
+		else {
+			Player::updateCamera();
+		}
+	}
+
+	void setTile(const glm::uvec2& tile) {
+		m_tile = tile;
+	}
+
+	glm::uvec2 getTile() const {
+		return m_tile;
+	}
         bool intersection = false;
 
         int mazeY = (int)(nextY / cellSize);
