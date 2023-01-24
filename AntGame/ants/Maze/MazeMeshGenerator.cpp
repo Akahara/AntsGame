@@ -1,54 +1,19 @@
 #include "MazeMeshGenerator.h"
 
-#include "MazeGeneration_proj/libAntMaze.h"
-
-constexpr unsigned char NORTH = 1;
-constexpr unsigned char EAST =	2;
-constexpr unsigned char SOUTH = 4;
-constexpr unsigned char WEST =	8;
-
 /**
 * 
 * This method is probably subtoptimal right now, as we have to hold way more indices than need (5*8 for each pillar, 3*8 for each wall)
 * TODO : optimize this, make it more flexible with the params too
 */
-Renderer::Mesh MazeMeshGenerator::generateMazeMesh(unsigned int width, unsigned int height) 
-
+Renderer::Mesh MazeMeshGenerator::generateMazeMesh(const Maze &maze) 
 {
-
-	ParamMaze params{
-		width,
-		height,
-		0,
-		0,
-		1,
-		2
-	};
-
-	Maze* maze = generateMazeCPP(&params);
-	uint8_t* tiles = maze->tiles;
-
+	unsigned int width = maze.nbLine;
+	unsigned int height = maze.nbColumn;
+	const uint8_t *tiles = maze.tiles;
 
 	std::vector<Renderer::Vertex> verticies;
 	std::vector<unsigned int> indicies;
-
-	constexpr float WALL_SIZE = 5.f;
-	constexpr float WALL_HEIGHT = 20.F;
-	constexpr float CORRIDOR_SPACE = 20.F;
 	
-	/*
-	* float s3 = std::sqrtf(3);
-  std::vector<Vertex> vertices{
-    // position              uv            normal            // tex id          // color
-    { { -.5f, -.5f, -.5f }, { 0.f, 0.f }, { -s3, -s3, -s3 }, (float)texId, {1.0f, 1.0f, 0.0f}, },
-    { { +.5f, -.5f, -.5f }, { 1.f, 0.f }, { +s3, -s3, -s3 }, (float)texId, {1.0f, 1.0f, 0.0f}, },
-    { { +.5f, +.5f, -.5f }, { 1.f, 1.f }, { +s3, +s3, -s3 }, (float)texId, {1.0f, 1.0f, 0.0f}, },
-    { { -.5f, +.5f, -.5f }, { 0.f, 1.f }, { -s3, +s3, -s3 }, (float)texId, {1.0f, 1.0f, 0.0f}, },
-    { { -.5f, -.5f, +.5f }, { 0.f, 1.f }, { -s3, -s3, +s3 }, (float)texId, {1.0f, 1.0f, 0.0f}, },
-    { { +.5f, -.5f, +.5f }, { 1.f, 1.f }, { +s3, -s3, +s3 }, (float)texId, {1.0f, 1.0f, 0.0f}, },
-    { { +.5f, +.5f, +.5f }, { 1.f, 0.f }, { +s3, +s3, +s3 }, (float)texId, {1.0f, 1.0f, 0.0f}, },
-    { { -.5f, +.5f, +.5f }, { 0.f, 0.f }, { -s3, +s3, +s3 }, (float)texId, {1.0f, 1.0f, 0.0f} },
-	*/
 	float s3 = std::sqrtf(3);
 	// Generate a bunch of pillars
 	for (unsigned int y = 0; y < height + 1; y++) {
