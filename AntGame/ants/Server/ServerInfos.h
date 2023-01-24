@@ -22,4 +22,11 @@ static ServerInfos pullServerInfos()
 	// get the infos
 
 }
+
+static void sendInfos() 
+{
+	std::cout << "You sent informations to the server" <<std::endl;
+
+}
+
 }

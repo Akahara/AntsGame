@@ -10,6 +10,9 @@
 #include <glad/glad.h>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "../Server/ServerInfos.h"
+#include "../Maze/MazeTileSystem.h"
+
 class Playground : public Scene {
 
 
@@ -23,6 +26,7 @@ private:
 
 	AntsPlayer m_player;
 
+	Terrain::Terrain  m_terrain;
 
 	Renderer::Mesh m_mesh = MazeMeshGenerator::generateMazeMesh(20,20);
 
@@ -30,7 +34,7 @@ private:
 
 	bool m_lookAtCube = false;
 
-	glm::vec3 m_tpssettings = { 4,3,4 };
+	glm::vec3 m_tpssettings = { 5,1.4,5 };
 
 
 public:
@@ -56,9 +60,35 @@ public:
 		meshShader.setUniform3f("u_SunPos", 1000, 1000, 1000);
 		Renderer::Shader::unbind();
 
-		
+
+		generateTerrain();		
 
 
+	}
+
+	void generateTerrain()
+	{
+		// 20x20 * 20x20 ~= 512x512 which is a good size of the erosion algorithm
+		constexpr unsigned int chunkSize = 20;
+		constexpr unsigned int chunkCount = 20;
+
+		{ // simple terrain + erosion
+			unsigned int noiseMapSize = 3 + chunkSize * chunkCount;
+			float* noiseMap = Noise::generateNoiseMap(noiseMapSize,
+				noiseMapSize,
+				/*scale*/30,
+				/*octaves*/4,
+				/*persistence*/.5f,
+				/*frequency*/1.f,
+				/*lacunarity*/2.1f,
+				/*seed*/0);
+			//Noise::ErosionSettings erosionSettings{};
+			//Noise::erode(noiseMap, noiseMapSize, erosionSettings);
+			Noise::rescaleNoiseMap(noiseMap, noiseMapSize, noiseMapSize, 0, 1, 0, /*terrain height*/9.f);
+			Noise::outlineNoiseMap(noiseMap, noiseMapSize, noiseMapSize, -5, 2);
+			Terrain::HeightMap* heightMap = new Terrain::ConcreteHeightMap(noiseMapSize, noiseMapSize, noiseMap);
+			m_terrain = Terrain::generateTerrain(heightMap, chunkCount, chunkCount, chunkSize);
+		}
 	}
 
 
@@ -66,6 +96,22 @@ public:
 
 		m_realTime += delta;
 		m_player.step(delta);
+
+		glm::vec3 playerPos = m_player.getPosition();
+		glm::uvec2 pos = MazeTileSystem::getTileCoordinates(playerPos, { 20,20 }, { 0,0,0 }, 25.f /* CORRIDOR+WALSIZE */ );
+		
+		if (pos != m_player.getTile()) {
+			m_player.setTile(pos);
+			Server::sendInfos(); // mock
+		}
+
+		
+		if (m_terrain.isInSamplableRegion(playerPos.x, playerPos.z))
+			playerPos.y = m_terrain.getHeight(playerPos.x, playerPos.z) +1.5;
+		
+
+		m_player.setPostion(playerPos);
+		m_player.updateCamera();
 
 		if (m_lookAtCube) {
 			m_player.getCamera().lookAt({ -10,-10,-10 });
@@ -79,11 +125,20 @@ public:
 
 		Renderer::Camera& camera = m_player.getCamera();
 
+		Renderer::Frustum cameraFrustum = Renderer::Frustum::createFrustumFromPerspectiveCamera(camera);
+
 		Renderer::clear();
-		glDisable(GL_CULL_FACE);
+
 		m_sandTexture.bind(0);
+		for (const auto& [position, chunk] : m_terrain.getChunks()) {
+			const AABB& chunkAABB = chunk.getMesh().getBoundingBox();
+
+			if (!cameraFrustum.isOnFrustum(chunkAABB))
+				continue;
+
+			Renderer::renderMesh(camera, glm::vec3{ 0, 1, 0 }, glm::vec3{ 1, 1, 1 }, chunk.getMesh());
+		}
 		Renderer::renderMesh(getCamera(), { 0,0,0 }, { 1,1,1 }, m_mesh);
-		Renderer::renderDebugCube(getCamera(), { -10,-10,-10 }, { 3,3,3 });
 		m_player.render();
 		m_sky.render(getCamera());
 

@@ -147,6 +147,7 @@
     <ClCompile Include="ants\Maze\MazeGeneration_proj\CTile.cpp" />
     <ClCompile Include="ants\Maze\MazeGeneration_proj\libAntMaze.cpp" />
     <ClCompile Include="ants\Maze\MazeMeshGenerator.cpp" />
+    <ClCompile Include="ants\Maze\MazeTileSystem.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MarbleEngine\MarbleEngine.vcxproj">
@@ -170,6 +171,7 @@
     <ClInclude Include="ants\Maze\MazeGeneration_proj\libAntMaze.h" />
     <ClInclude Include="ants\Server\ServerInfos.h" />
     <ClInclude Include="ants\Maze\MazeMeshGenerator.h" />
+    <ClInclude Include="ants\Maze\MazeTileSystem.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

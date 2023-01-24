@@ -33,7 +33,7 @@ Renderer::Mesh MazeMeshGenerator::generateMazeMesh(unsigned int width, unsigned 
 	std::vector<unsigned int> indicies;
 
 	constexpr float WALL_SIZE = 5.f;
-	constexpr float WALL_HEIGHT = 20.F;
+	constexpr float WALL_HEIGHT = 30.F;
 	constexpr float CORRIDOR_SPACE = 20.F;
 	
 	/*
@@ -69,40 +69,44 @@ Renderer::Mesh MazeMeshGenerator::generateMazeMesh(unsigned int width, unsigned 
 
 			auto firstIndice = 8 * y * (width + 1) + 8 * x;
 
-			
-			indicies.push_back(firstIndice);
+			// Back face
 			indicies.push_back(firstIndice+1);
-			indicies.push_back(firstIndice+5);
-			indicies.push_back(firstIndice+5);
-			indicies.push_back(firstIndice+4);
 			indicies.push_back(firstIndice);
+			indicies.push_back(firstIndice+5);
+			indicies.push_back(firstIndice+5);
+			indicies.push_back(firstIndice);
+			indicies.push_back(firstIndice+4);
 
-			indicies.push_back(firstIndice);
+			// Left face
 			indicies.push_back(firstIndice+4);
-			indicies.push_back(firstIndice+7);
+			indicies.push_back(firstIndice);
 			indicies.push_back(firstIndice+7);
 			indicies.push_back(firstIndice+3);
+			indicies.push_back(firstIndice+7);
 			indicies.push_back(firstIndice);
 
-			indicies.push_back(firstIndice+1);
+			// Right face
 			indicies.push_back(firstIndice+5);
 			indicies.push_back(firstIndice+6);
+			indicies.push_back(firstIndice+1);
 			indicies.push_back(firstIndice+6);
 			indicies.push_back(firstIndice+2);
 			indicies.push_back(firstIndice+1);
 
+			// Front face
 			indicies.push_back(firstIndice+3);
 			indicies.push_back(firstIndice+2);
 			indicies.push_back(firstIndice+6);
-			indicies.push_back(firstIndice+6);
 			indicies.push_back(firstIndice+7);
 			indicies.push_back(firstIndice+3);
-
-			indicies.push_back(firstIndice+4);
-			indicies.push_back(firstIndice+5);
 			indicies.push_back(firstIndice+6);
+
+			// Top
+			indicies.push_back(firstIndice+5);
+			indicies.push_back(firstIndice+4);
 			indicies.push_back(firstIndice+6);
 			indicies.push_back(firstIndice+7);
+			indicies.push_back(firstIndice+6);
 			indicies.push_back(firstIndice+4);
 			
 
@@ -122,18 +126,18 @@ Renderer::Mesh MazeMeshGenerator::generateMazeMesh(unsigned int width, unsigned 
 
 		// -- North face
 
-		indicies.push_back(pillar_base_top_right + 5);
 		indicies.push_back(pillar_base_top_right + 8);
 		indicies.push_back(pillar_base_top_right + 1);
+		indicies.push_back(pillar_base_top_right + 5);
 
 		indicies.push_back(pillar_base_top_right + 12);
-		indicies.push_back(pillar_base_top_right + 5);
 		indicies.push_back(pillar_base_top_right + 8);
+		indicies.push_back(pillar_base_top_right + 5);
 
 		// -- South face
 
-		indicies.push_back(pillar_base_top_right + 6);
 		indicies.push_back(pillar_base_top_right + 15);
+		indicies.push_back(pillar_base_top_right + 6);
 		indicies.push_back(pillar_base_top_right + 11);
 
 		indicies.push_back(pillar_base_top_right + 6);
@@ -142,13 +146,13 @@ Renderer::Mesh MazeMeshGenerator::generateMazeMesh(unsigned int width, unsigned 
 
 		// -- Top face, not necessary but why not
 
-		indicies.push_back(pillar_base_top_right + 5);
 		indicies.push_back(pillar_base_top_right + 6);
 		indicies.push_back(pillar_base_top_right + 15);
+		indicies.push_back(pillar_base_top_right + 5);
 
 		indicies.push_back(pillar_base_top_right + 5);
-		indicies.push_back(pillar_base_top_right + 12);
 		indicies.push_back(pillar_base_top_right + 15);
+		indicies.push_back(pillar_base_top_right + 12);
 
 
 	};
@@ -161,9 +165,9 @@ Renderer::Mesh MazeMeshGenerator::generateMazeMesh(unsigned int width, unsigned 
 		// -- Top face, not necessary but why not
 
 		
-		indicies.push_back(pillar_base_top_right + 6);
 		indicies.push_back(pillar_base_top_right + 7);
 		indicies.push_back(pillar_base_top_right + 4 + stride);
+		indicies.push_back(pillar_base_top_right + 6);
 
 		indicies.push_back(pillar_base_top_right + 4 + stride);
 		indicies.push_back(pillar_base_top_right + 5 + stride);
@@ -182,12 +186,12 @@ Renderer::Mesh MazeMeshGenerator::generateMazeMesh(unsigned int width, unsigned 
 
 		// -- West face
 		
-		indicies.push_back(pillar_base_top_right + 7);
 		indicies.push_back(pillar_base_top_right + 4 + stride);
+		indicies.push_back(pillar_base_top_right + 7);
 		indicies.push_back(pillar_base_top_right + stride);
 
-		indicies.push_back(pillar_base_top_right + stride);
 		indicies.push_back(pillar_base_top_right + 3);
+		indicies.push_back(pillar_base_top_right + stride);
 		indicies.push_back(pillar_base_top_right + 7);
 	
 
