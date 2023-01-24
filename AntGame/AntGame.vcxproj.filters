@@ -36,6 +36,9 @@
     <ClCompile Include="ants\Maze\MazeGeneration_proj\libAntMaze.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ants\GameLogic\AntsPlayer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
@@ -75,6 +78,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ants\Maze\MazeGeneration_proj\CTile.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ants\GameLogic\AntsPlayer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
