@@ -32,10 +32,8 @@ private:
 	Renderer::Mesh    m_mazeMesh;
 	Renderer::Texture m_sandTexture = Renderer::Texture("res/textures/sand1.jpg");
 
-	glm::vec2 m_tpssettings = { 4,3 };
+	glm::vec2 m_tpssettings = { 5,1.4 };
 
-
-	glm::vec3 m_tpssettings = { 5,1.4,5 };
 
 
 public:
@@ -153,7 +151,7 @@ public:
 			Renderer::renderMesh(camera, glm::vec3{ 0, 1, 0 }, glm::vec3{ 1, 1, 1 }, chunk.getMesh());
 		}
 		Renderer::renderMesh(getCamera(), { 0,0,0 }, { 1,1,1 }, m_mazeMesh);
-		m_player.render();
+		m_player.render(camera);
 		m_sky.render(getCamera());
 
 	}
@@ -167,6 +165,7 @@ public:
 		}
 
 		ImGui::Checkbox("Use debug player", &m_useDbgPlayer);
+		if (ImGui::Button("Switch viewmode"))  m_player.switchView();
 	}
 
 	CAMERA_IS_PLAYER(m_player)
