@@ -2,60 +2,117 @@
 
 #include "marble/vendor/imgui/imgui.h"
 
-#include "marble/World/Player.h"
+#include "marble/abstraction/Inputs.h"
+#include "marble/abstraction/Camera.h"
 #include "marble/abstraction/UnifiedRenderer.h"
+#include "marble/Utils/Mathf.h"
 #include "../Maze/MazeMeshGenerator.h"
 
-class AntsPlayer : public Player 
+class AntsPlayer
 {
 private:
-    Renderer::Mesh m_mesh = Renderer::createCubeMesh();
+    Renderer::Mesh   m_mesh = Renderer::createCubeMesh();
+    static constexpr float m_size = 1;
+    
+    glm::vec3        m_position;
+    float            m_yaw;
+    Renderer::Camera m_camera;
 
     struct ThirdPersonParams {
-        Renderer::Camera camera;
-        glm::vec3 playerForward;
         float distanceFromSubject = 4.f;
         float cameraHeight = 2.f;
         const Maze *maze = nullptr; // not owned, used to avoid moving the camera into a wall
     } m_tps;
 
 public:
-    AntsPlayer() : m_tps{} {}
+    AntsPlayer() 
+      : m_position{}, m_yaw{0}, m_tps{}
+    {
+      m_camera.setProjection(Renderer::PerspectiveProjection{ Mathf::PI / 3.f, 16.f / 9.f });
+    }
 
     void setMaze(const Maze &maze) { m_tps.maze = &maze; }
-    Renderer::Camera &getCamera() override { return m_tps.camera; }
+    const Renderer::Camera &getCamera() const { return m_camera; }
     void setTPSDistances(glm::vec2 dh) { m_tps.distanceFromSubject = dh.x; m_tps.cameraHeight = dh.y; }
 
-    void step(float delta) override
+    void step(float delta)
     {
-        Player::step(delta);
+      move(delta);
+      repositionCamera();
+    }
 
-        m_tps.camera = m_camera;
+    void move(float delta)
+    {
+      glm::vec3 forward{ glm::cos(m_yaw), 0, glm::sin(m_yaw) };
+      glm::vec3 right = glm::cross(forward, glm::vec3{0,1,0});
 
-        glm::vec3 meshDir = m_tps.camera.getForward();
-        m_tps.playerForward = glm::normalize(glm::vec3{ meshDir.x, 0, meshDir.z });
-        
-        float cameraDistance = m_tps.distanceFromSubject;
-        if (m_tps.maze != nullptr) {
-          glm::vec2 rayOrigin = { m_camera.getPosition().x, m_camera.getPosition().z };
-          glm::vec2 rayDirection = { -m_tps.playerForward.x, -m_tps.playerForward.z };
-          cameraDistance = glm::min(cameraDistance, raycastMaze(rayOrigin, rayDirection, 30.f));
-        }
-        m_tps.camera.moveCamera(-m_tps.playerForward * cameraDistance + glm::vec3{0, m_tps.cameraHeight, 0});
-        m_tps.camera.lookAt(getPosition());
-        m_tps.camera.recalculateViewMatrix();
-        m_tps.camera.recalculateViewProjectionMatrix();
+      glm::vec3 motion{ 0 };
+      if (Inputs::isKeyPressed('A'))
+        motion -= right;
+      if (Inputs::isKeyPressed('D'))
+        motion += right;
+      if (Inputs::isKeyPressed('W'))
+        motion += forward;
+      if (Inputs::isKeyPressed('S'))
+        motion -= forward;
+      if(motion.x != 0 || motion.z != 0)
+      motion = glm::normalize(motion);
+
+      constexpr float speed = 25.f;
+
+      glm::vec2 rotationMotion = Inputs::getMouseDelta() / Inputs::getInputRange() * Mathf::PI;
+
+      m_yaw += rotationMotion.x;
+      m_position += motion * speed * delta;
+
+      glm::vec2 mazePosition = glm::vec2{ m_position.x / MazeMeshGenerator::CORRIDOR_SPACE, m_position.z / MazeMeshGenerator::CORRIDOR_SPACE };
+      glm::ivec2 tilePos = mazePosition;
+      if ((uint32_t)tilePos.x >= m_tps.maze->nbColumn || (uint32_t)tilePos.y >= m_tps.maze->nbLine) {
+        // out of bounds
+      } else {
+        // very crude implementation, staggers when crossing corners
+        // TODO update the collisions detection and correction algorithm
+        constexpr float safeWallDistance = MazeMeshGenerator::WALL_SIZE * .5f + m_size * .5f;
+        glm::vec2 positionInTile = glm::fract(mazePosition) * MazeMeshGenerator::CORRIDOR_SPACE;
+        uint32_t tile = m_tps.maze->tiles[tilePos.x + tilePos.y * m_tps.maze->nbColumn];
+        bool inXIntersection = positionInTile.x < MazeMeshGenerator::WALL_SIZE * .5f || positionInTile.x > MazeMeshGenerator::CORRIDOR_SPACE - MazeMeshGenerator::WALL_SIZE * .5f;
+        bool inYIntersection = positionInTile.y < MazeMeshGenerator::WALL_SIZE * .5f || positionInTile.y > MazeMeshGenerator::CORRIDOR_SPACE - MazeMeshGenerator::WALL_SIZE * .5f;
+        if (tile & MazeMeshGenerator::NORTH || inXIntersection)
+          m_position.z = glm::max(m_position.z, tilePos.y * MazeMeshGenerator::CORRIDOR_SPACE + safeWallDistance);
+        if (tile & MazeMeshGenerator::SOUTH || inXIntersection)
+          m_position.z = glm::min(m_position.z, (tilePos.y + 1) * MazeMeshGenerator::CORRIDOR_SPACE - safeWallDistance);
+        if (tile & MazeMeshGenerator::WEST || inYIntersection)
+          m_position.x = glm::max(m_position.x, tilePos.x * MazeMeshGenerator::CORRIDOR_SPACE + safeWallDistance);
+        if (tile & MazeMeshGenerator::EAST || inYIntersection)
+          m_position.x = glm::min(m_position.x, (tilePos.x + 1) * MazeMeshGenerator::CORRIDOR_SPACE - safeWallDistance);
+      }
+    }
+
+    void repositionCamera()
+    {
+      glm::vec3 forward{ glm::cos(m_yaw), 0, glm::sin(m_yaw) };
+
+      float cameraDistance = m_tps.distanceFromSubject;
+      if (m_tps.maze != nullptr) {
+        glm::vec2 rayOrigin = { m_position.x, m_position.z };
+        glm::vec2 rayDirection = { -forward.x, -forward.z };
+        float minWallDistance = .5f;
+        cameraDistance = glm::min(cameraDistance, raycastMaze(rayOrigin, rayDirection, cameraDistance+minWallDistance)-minWallDistance);
+      }
+      m_camera.setPosition(m_position - forward * cameraDistance + glm::vec3{ 0, m_tps.cameraHeight, 0 });
+      m_camera.lookAt(m_position);
+      m_camera.recalculateViewMatrix();
+      m_camera.recalculateViewProjectionMatrix();
     }
 
     void render(const Renderer::Camera &viewCamera) const
     {
-        Renderer::renderMesh(viewCamera, getPosition(), { 1,1,1 }, m_mesh);
+        Renderer::renderMesh(viewCamera, m_position, { 1,1,1 }, m_mesh);
 
-        Renderer::renderDebugLine(viewCamera, getPosition(), getPosition() + m_tps.playerForward);
-        Renderer::renderDebugLine(viewCamera, getPosition(), getPosition() - m_tps.playerForward, { 1,0,0,1 });
-        Renderer::renderDebugLine(viewCamera, getPosition(), m_tps.camera.getPosition(), { 1,1,0,1 });
-
-        debugRaycast(viewCamera);
+        glm::vec3 forward{ glm::cos(m_yaw), 0, glm::sin(m_yaw) };
+        Renderer::renderDebugLine(viewCamera, m_position, m_position + forward);
+        Renderer::renderDebugLine(viewCamera, m_position, m_position - forward, { 1,0,0,1 });
+        Renderer::renderDebugLine(viewCamera, m_position, m_camera.getPosition(), { 1,1,0,1 });
     }
 
     float raycastMaze(glm::vec2 rayOrigin, glm::vec2 rayDirection, float maxDistance) const
@@ -116,66 +173,6 @@ public:
       }
 
       return glm::sqrt(hitDistanceSquared);
-    }
-
-    void debugRaycast(const Renderer::Camera &camera) const // TODO remove completely, its just nice to have comited somewhere
-    {
-      glm::vec2 rayOrigin = { m_camera.getPosition().x, m_camera.getPosition().z };
-      glm::vec2 rayDirection = { -m_tps.playerForward.x, -m_tps.playerForward.z };
-      float maxDistance = 300.f;
-      if (rayDirection.x == 0)
-        rayDirection.x = .01f;
-
-      constexpr float cellSize = MazeMeshGenerator::CORRIDOR_SPACE;
-      constexpr float wallSize = MazeMeshGenerator::WALL_SIZE;
-      
-      float hitDistanceSquared = maxDistance * maxDistance;
-
-      for (int i = 0; ; i++) {
-        float nextX = glm::floor(rayOrigin.x / cellSize+i*glm::sign(rayDirection.x)) * cellSize + (rayDirection.x > 0 ? cellSize - wallSize * .5f : wallSize * .5f);
-        float yAtNextX = rayOrigin.y + (nextX - rayOrigin.x) / rayDirection.x * rayDirection.y;
-        
-        if((nextX-rayOrigin.x)*(nextX-rayOrigin.x) + (yAtNextX-rayOrigin.y)*(yAtNextX-rayOrigin.y) >= hitDistanceSquared)
-          break;
-
-        bool intersection = false;
-
-        int mazeX = (int)(nextX / cellSize);
-        int mazeY = (int)(yAtNextX / cellSize);
-        if (
-          glm::mod(yAtNextX + wallSize * .5f, cellSize) < wallSize ||
-          (mazeX >= 0 && (uint32_t)mazeX < m_tps.maze->nbLine && mazeY >= 0 && (uint32_t)mazeY < m_tps.maze->nbColumn &&
-          (m_tps.maze->tiles[mazeX + mazeY * m_tps.maze->nbColumn] & (rayDirection.x < 0 ? MazeMeshGenerator::WEST : MazeMeshGenerator::EAST)))
-          ) {
-          intersection = true;
-        }
-        Renderer::renderDebugCube(camera, { nextX, 0, rayOrigin.y });
-        Renderer::renderDebugCube(camera, { nextX, 0, yAtNextX }, { .5f-i*.1f,1+i,.5f-i*.1f }, intersection ? glm::vec4{ 1,.5f,.5f,1 } : glm::vec4{ .3f,.3f,.3f,1 });
-      }
-      
-      for (int i = 0; ; i++) {
-        float nextY = glm::floor(rayOrigin.y / cellSize+i*glm::sign(rayDirection.y)) * cellSize + (rayDirection.y > 0 ? cellSize - wallSize * .5f : wallSize * .5f);
-        float xAtNextY = rayOrigin.x + (nextY - rayOrigin.y) / rayDirection.y * rayDirection.x;
-        
-        if((nextY-rayOrigin.y)*(nextY-rayOrigin.y) + (xAtNextY-rayOrigin.x)*(xAtNextY-rayOrigin.x) >= hitDistanceSquared)
-          break;
-
-        bool intersection = false;
-
-        int mazeY = (int)(nextY / cellSize);
-        int mazeX = (int)(xAtNextY / cellSize);
-        if (
-          glm::mod(xAtNextY + wallSize * .5f, cellSize) < wallSize ||
-          (mazeX >= 0 && (uint32_t)mazeX < m_tps.maze->nbLine && mazeY >= 0 && (uint32_t)mazeY < m_tps.maze->nbColumn &&
-          (m_tps.maze->tiles[mazeX + mazeY * m_tps.maze->nbColumn] & (rayDirection.y < 0 ? MazeMeshGenerator::NORTH : MazeMeshGenerator::SOUTH)))
-          ) {
-          intersection = true;
-        }
-        Renderer::renderDebugCube(camera, { rayOrigin.x, 0, nextY });
-        Renderer::renderDebugCube(camera, { xAtNextY, 0, nextY }, { 1,1,1 }, intersection ? glm::vec4{ 1,.5f,.5f,1 } : glm::vec4{ .3f,.3f,.3f,1 });
-      }
-
-      Renderer::renderDebugCube(camera, { rayOrigin.x, 0, rayOrigin.y });
     }
 
 };

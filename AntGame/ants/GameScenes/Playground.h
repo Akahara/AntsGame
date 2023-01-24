@@ -14,13 +14,13 @@ class Playground : public Scene {
 private:
 	World::Sky m_sky{World::Sky::SkyboxesType::SAND};
 
-	float m_realTime = 0;
+	float      m_realTime = 0;
 
 	bool       m_useDbgPlayer = false;
 	AntsPlayer m_player;
 	Player     m_debugPlayer;
 
-	Maze m_maze;
+	Maze       m_maze;
 
 	Renderer::Mesh    m_mazeMesh;
 	Renderer::Texture m_sandTexture = Renderer::Texture("res/textures/sand1.jpg");
@@ -70,14 +70,16 @@ public:
 	{
 		m_realTime += delta;
 
-		Player &activePlayer = m_useDbgPlayer ? m_debugPlayer : m_player;
-		activePlayer.step(delta);
+		if (m_useDbgPlayer) {
+		  m_debugPlayer.step(delta);
+		} else {
+		  m_player.step(delta);
+		}
 	}
 
 	void onRender() override
 	{
-		Player &activePlayer = m_useDbgPlayer ? m_debugPlayer : m_player;
-		Renderer::Camera& camera = activePlayer.getCamera();
+		const Renderer::Camera& camera = m_useDbgPlayer ? m_debugPlayer.getCamera() : m_player.getCamera();
 
 		Renderer::clear();
 		glDisable(GL_CULL_FACE);
@@ -98,7 +100,7 @@ public:
 		ImGui::Checkbox("Use debug player", &m_useDbgPlayer);
 	}
 
-	CAMERA_IS_PLAYER(m_player)
+	CAMERA_NOT_DEFINED();
 };
 
 

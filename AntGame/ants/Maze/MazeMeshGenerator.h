@@ -15,7 +15,7 @@ constexpr unsigned char SOUTH = 4;
 constexpr unsigned char WEST = 8;
 
 constexpr float WALL_SIZE = 5.f;
-constexpr float WALL_HEIGHT = .2F;
+constexpr float WALL_HEIGHT = 20.F;
 constexpr float CORRIDOR_SPACE = 20.F;
 
 Renderer::Mesh generateMazeMesh(const Maze &maze);
