@@ -116,7 +116,7 @@ public:
 		
 		if (pos != m_player.getTile()) {
 			m_player.setTile(pos);
-			Server::sendInfos(); // mock
+			Server::sendInfos(pos); // mock
 		}
 
 		
@@ -124,18 +124,20 @@ public:
 			playerPos.y = m_terrain.getHeight(playerPos.x, playerPos.z) +1.5;
 		
 
-		m_player.setPostion(playerPos);
+		m_player.setPosition(playerPos);
 		m_player.updateCamera();
 
-
-		Player &activePlayer = m_useDbgPlayer ? m_debugPlayer : m_player;
-		activePlayer.step(delta);
+		if (m_useDbgPlayer) {
+			m_debugPlayer.step(delta);
+		}
+		else {
+			m_player.step(delta);
+		}
 	}
 
 	void onRender() override
 	{
-		Player &activePlayer = m_useDbgPlayer ? m_debugPlayer : m_player;
-		Renderer::Camera& camera = activePlayer.getCamera();
+		const Renderer::Camera& camera = m_useDbgPlayer ? m_debugPlayer.getCamera() : m_player.getCamera();
 
 		Renderer::Frustum cameraFrustum = Renderer::Frustum::createFrustumFromPerspectiveCamera(camera);
 
@@ -150,9 +152,9 @@ public:
 
 			Renderer::renderMesh(camera, glm::vec3{ 0, 1, 0 }, glm::vec3{ 1, 1, 1 }, chunk.getMesh());
 		}
-		Renderer::renderMesh(getCamera(), { 0,0,0 }, { 1,1,1 }, m_mazeMesh);
+		Renderer::renderMesh(camera, { 0,0,0 }, { 1,1,1 }, m_mazeMesh);
 		m_player.render(camera);
-		m_sky.render(getCamera());
+		m_sky.render(camera);
 
 	}
 
@@ -165,10 +167,9 @@ public:
 		}
 
 		ImGui::Checkbox("Use debug player", &m_useDbgPlayer);
-		if (ImGui::Button("Switch viewmode"))  m_player.switchView();
 	}
 
-	CAMERA_IS_PLAYER(m_player)
+	CAMERA_NOT_DEFINED();
 };
 
 

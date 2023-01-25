@@ -23,9 +23,9 @@ static ServerInfos pullServerInfos()
 
 }
 
-static void sendInfos() 
+static void sendInfos(const glm::uvec2& pos) 
 {
-	std::cout << "You sent informations to the server" <<std::endl;
+	std::cout << "Position sent : " << pos <<std::endl;
 
 }
 
