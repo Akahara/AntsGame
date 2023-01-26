@@ -140,6 +140,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="ants\GameLogic\AntsPlayer.cpp" />
+    <ClCompile Include="ants\GameLogic\Pheremones.cpp" />
     <ClCompile Include="ants\main.cpp" />
     <ClCompile Include="ants\Maze\MazeGeneration_proj\CException.cpp" />
     <ClCompile Include="ants\Maze\MazeGeneration_proj\CMaze.cpp" />
@@ -160,6 +161,7 @@
   <ItemGroup>
     <ClInclude Include="ants\GameLogic\AntsPlayer.h" />
     <ClInclude Include="ants\Food.h" />
+    <ClInclude Include="ants\GameLogic\Pheremones.h" />
     <ClInclude Include="ants\GameManager.h" />
     <ClInclude Include="ants\GameScenes\InGame.h" />
     <ClInclude Include="ants\GameScenes\Menu.h" />

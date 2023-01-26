@@ -16,6 +16,8 @@
 #include "../Server/ServerInfos.h"
 #include "../Maze/MazeTileSystem.h"
 
+#include "../GameLogic/Pheremones.h"
+
 class Playground : public Scene {
 private:
 	World::Sky m_sky{World::Sky::SkyboxesType::SAND};
@@ -34,6 +36,13 @@ private:
 
 	glm::vec2 m_tpssettings = { 5,1.4 };
 
+	PheremonesManager m_pManager{ 
+		PheremonesManager::MazeProperties{
+		glm::uvec2(20,20),
+		glm::vec3(0,0,0),
+		5.f,20.f
+		} 
+	};
 
 
 public:
@@ -109,7 +118,6 @@ public:
 	void step(float delta) override {
 
 		m_realTime += delta;
-		m_player.step(delta);
 
 		glm::vec3 playerPos = m_player.getPosition();
 		glm::uvec2 pos = MazeTileSystem::getTileCoordinates(playerPos, { 20,20 }, { 0,0,0 }, 25.f /* CORRIDOR+WALSIZE */ );
@@ -117,11 +125,14 @@ public:
 		if (pos != m_player.getTile()) {
 			m_player.setTile(pos);
 			Server::sendInfos(pos); // mock
+			auto infos = Server::pullServerInfos();
+			m_pManager.setPheromones(infos.pheromonesValues);
 		}
 
-		
+		/*
 		if (m_terrain.isInSamplableRegion(playerPos.x, playerPos.z))
 			playerPos.y = m_terrain.getHeight(playerPos.x, playerPos.z) +1.5;
+		*/
 		
 
 		m_player.setPosition(playerPos);
@@ -129,9 +140,11 @@ public:
 
 		if (m_useDbgPlayer) {
 			m_debugPlayer.step(delta);
+			m_pManager.step(delta, m_debugPlayer.getPosition());
 		}
 		else {
 			m_player.step(delta);
+			m_pManager.step(delta, m_player.getPosition());
 		}
 	}
 
@@ -142,7 +155,7 @@ public:
 		Renderer::Frustum cameraFrustum = Renderer::Frustum::createFrustumFromPerspectiveCamera(camera);
 
 		Renderer::clear();
-
+		/*
 		m_sandTexture.bind(0);
 		for (const auto& [position, chunk] : m_terrain.getChunks()) {
 			const AABB& chunkAABB = chunk.getMesh().getBoundingBox();
@@ -153,7 +166,9 @@ public:
 			Renderer::renderMesh(camera, glm::vec3{ 0, 1, 0 }, glm::vec3{ 1, 1, 1 }, chunk.getMesh());
 		}
 		Renderer::renderMesh(camera, { 0,0,0 }, { 1,1,1 }, m_mazeMesh);
+		*/
 		m_player.render(camera);
+		m_pManager.render(camera);
 		m_sky.render(camera);
 
 	}

@@ -12,6 +12,8 @@ struct ServerInfos {
 	uint32_t nestLine;
 	uint8_t* tiles; // c + l * nbColumn 
 
+	std::vector<float> pheromonesValues;
+
 
 };
 
@@ -21,6 +23,13 @@ static ServerInfos pullServerInfos()
 	// mock
 	// get the infos
 
+	ServerInfos res;
+	
+	for (int i = 0; i < 20 * 20; i++) {
+		res.pheromonesValues.push_back((float)rand()/(float)RAND_MAX);
+	}
+
+	return res;
 }
 
 static void sendInfos(const glm::uvec2& pos) 

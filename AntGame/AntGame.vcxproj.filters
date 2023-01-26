@@ -42,6 +42,9 @@
     <ClCompile Include="ants\Maze\MazeTileSystem.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ants\GameLogic\Pheremones.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
@@ -87,6 +90,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ants\Maze\MazeTileSystem.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ants\GameLogic\Pheremones.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
