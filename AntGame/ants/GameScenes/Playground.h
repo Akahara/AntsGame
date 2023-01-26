@@ -109,7 +109,6 @@ public:
 	void step(float delta) override {
 
 		m_realTime += delta;
-		m_player.step(delta);
 
 		glm::vec3 playerPos = m_player.getPosition();
 		glm::uvec2 pos = MazeTileSystem::getTileCoordinates(playerPos, { 20,20 }, { 0,0,0 }, 25.f /* CORRIDOR+WALSIZE */ );
