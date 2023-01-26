@@ -225,29 +225,30 @@ private:
 		}
 
 		inline void drawPheromone(const glm::vec3& position, const glm::vec3& colors, const glm::vec3& size, const glm::vec3& playerPosition) {
-
-			/*
-			
-			ALED
-			*/
 			glm::vec3 dir = glm::normalize(playerPosition - position);
-			glm::vec3 v = glm::cross(dir, glm::vec3(0, 1, 0));
-			glm::vec3 u = glm::cross(v, dir);
+			glm::vec3 v = glm::normalize(glm::cross(dir, glm::vec3(0, 1, 0)));
+			glm::vec3 u = glm::normalize(glm::cross(v, dir));
 
-			glm::mat4x3 v_positions = {
-				{ position.x, position.y, position.z },
-				{ position.x + size.x, position.y,  position.z },
-				{ position.x + size.x, position.y + size.y, position.z },
-				{ position.x , position.y + size.y,  position.z }
+			// the model is a plane facing -z, centered on the origin
+			glm::vec3 v_positions[4]{
+				{ -size.x*.5f, -size.y*.5f, 0 },
+				{ +size.x*.5f, -size.y*.5f, 0 },
+				{ +size.x*.5f, +size.y*.5f, 0 },
+				{ -size.x*.5f, +size.y*.5f, 0 },
 			};
 
+			// rotate it so that it faces the camera
 			glm::mat3 P = {
-				dir,
 				u,
-				v
+				v,
+				dir,
 			};
 
-			v_positions = P *  v_positions;
+			// and also add its world position (this is basically the M matrix precomputed)
+			v_positions[0] = P * v_positions[0] + position;
+			v_positions[1] = P * v_positions[1] + position;
+			v_positions[2] = P * v_positions[2] + position;
+			v_positions[3] = P * v_positions[3] + position;
 
 			// Bottom left
 			m_renderer.m_bufferPtr->position = v_positions[0];// 2D only

@@ -140,11 +140,11 @@ public:
 
 		if (m_useDbgPlayer) {
 			m_debugPlayer.step(delta);
-			m_pManager.step(delta, m_debugPlayer.getPosition());
+			m_pManager.step(delta, m_debugPlayer.getCamera().getPosition());
 		}
 		else {
 			m_player.step(delta);
-			m_pManager.step(delta, m_player.getPosition());
+			m_pManager.step(delta, m_player.getCamera().getPosition());
 		}
 	}
 
