@@ -18,6 +18,8 @@
 
 #include "../GameLogic/Pheremones.h"
 
+#include "marble/abstraction/pipeline/VFXPipeline.h"
+
 class Playground : public Scene {
 private:
 	World::Sky m_sky{World::Sky::SkyboxesType::SAND};
@@ -33,6 +35,8 @@ private:
 
 	Renderer::Mesh    m_mazeMesh;
 	Renderer::Texture m_sandTexture = Renderer::Texture("res/textures/sand1.jpg");
+
+	visualEffects::VFXPipeline m_pipeline;
 
 	glm::vec2 m_tpssettings = { 5,1.4 };
 
@@ -86,6 +90,7 @@ public:
 
 		generateTerrain();		
 
+		m_pipeline.registerEffect<visualEffects::Bloom>();
 
 	}
 
@@ -107,7 +112,7 @@ public:
 				/*seed*/0);
 			//Noise::ErosionSettings erosionSettings{};
 			//Noise::erode(noiseMap, noiseMapSize, erosionSettings);
-			Noise::rescaleNoiseMap(noiseMap, noiseMapSize, noiseMapSize, 0, 1, 0, /*terrain height*/9.f);
+			Noise::rescaleNoiseMap(noiseMap, noiseMapSize, noiseMapSize, 0, 1, 0, /*terrain height*/2.f);
 			Noise::outlineNoiseMap(noiseMap, noiseMapSize, noiseMapSize, -5, 2);
 			Terrain::HeightMap* heightMap = new Terrain::ConcreteHeightMap(noiseMapSize, noiseMapSize, noiseMap);
 			m_terrain = Terrain::generateTerrain(heightMap, chunkCount, chunkCount, chunkSize);
@@ -126,13 +131,14 @@ public:
 			m_player.setTile(pos);
 			Server::sendInfos(pos); // mock
 			auto infos = Server::pullServerInfos();
-			m_pManager.setPheromones(infos.pheromonesValues);
+			//m_pManager.setPheromones(infos.pheromonesValues);
 		}
 
-		/*
-		if (m_terrain.isInSamplableRegion(playerPos.x, playerPos.z))
+		
+		if (m_terrain.isInSamplableRegion(playerPos.x, playerPos.z) && !m_useDbgPlayer)
 			playerPos.y = m_terrain.getHeight(playerPos.x, playerPos.z) +1.5;
-		*/
+		
+		
 		
 
 		m_player.setPosition(playerPos);
@@ -154,8 +160,9 @@ public:
 
 		Renderer::Frustum cameraFrustum = Renderer::Frustum::createFrustumFromPerspectiveCamera(camera);
 
+		m_pipeline.bind();
 		Renderer::clear();
-		/*
+		
 		m_sandTexture.bind(0);
 		for (const auto& [position, chunk] : m_terrain.getChunks()) {
 			const AABB& chunkAABB = chunk.getMesh().getBoundingBox();
@@ -163,13 +170,21 @@ public:
 			if (!cameraFrustum.isOnFrustum(chunkAABB))
 				continue;
 
-			Renderer::renderMesh(camera, glm::vec3{ 0, 1, 0 }, glm::vec3{ 1, 1, 1 }, chunk.getMesh());
+			Renderer::renderMesh(camera, glm::vec3{ 0, 0, 0 }, glm::vec3{ 1, 1, 1 }, chunk.getMesh());
 		}
+		
 		Renderer::renderMesh(camera, { 0,0,0 }, { 1,1,1 }, m_mazeMesh);
-		*/
+		
 		m_player.render(camera);
+
 		m_pManager.render(camera);
 		m_sky.render(camera);
+
+
+		m_pipeline.unbind();
+		m_pipeline.renderPipeline();
+		
+		
 
 	}
 
@@ -182,7 +197,10 @@ public:
 		}
 
 		ImGui::Checkbox("Use debug player", &m_useDbgPlayer);
+	
+		m_pipeline.onImGuiRender();
 	}
+
 
 	CAMERA_NOT_DEFINED();
 };

@@ -12,19 +12,21 @@ static std::string vs = R"glsl(
 
 			layout(location = 0) in vec3 position;
 			layout(location = 1) in vec3 aColor;
+			layout(location = 2) in vec2 i_uv;
 
 			out vec2 v_TexCoord;
 			out vec4 v_Color;
+			out vec2 o_uv;
 
-			//uniform mat2 u_R;
 			uniform mat4 u_VP;
+			uniform float u_time;
 
 			void main(){
 	
 				vec4 vertex = vec4(position, 1);
-				//vertex.xz = u_R * vertex.xz;
+				vertex.y += cos(u_time);
 				gl_Position = u_VP * vertex;
-				
+				o_uv = i_uv;
 				v_Color = vec4(aColor,1.F);
 			};
 		)glsl";
@@ -35,10 +37,13 @@ static std::string fs = R"glsl(
 			layout(location = 0) out vec4 color;
 
 			in vec4 v_Color;
+			in vec2 o_uv;
+			uniform sampler2D u_texture;
 
 			void main()
 			{
-				color = v_Color;
+				color = texture(u_texture, o_uv);
+				color.rgb += v_Color.rgb; 
 			};
 		)glsl";
 
@@ -50,12 +55,15 @@ class PheremonesManager
 private:
 
 	std::vector<float> m_pheromones;
-	
+
+	Renderer::Texture m_texture = Renderer::Texture("res/textures/pheromones.png");
+	float m_realtime;
 
 	struct QuadVertex {
 
 		glm::vec3 position;
 		glm::vec3 color;
+		glm::vec2 uv;
 
 	};
 
@@ -71,7 +79,7 @@ private:
 		QuadVertex* m_bufferPtr = nullptr;
 		unsigned int m_indexCount = 0;
 
-	} m_renderer ;
+	} m_renderer;
 
 	size_t MaxQuadCount;
 	size_t MaxVertexCount;
@@ -91,14 +99,14 @@ public:
 
 public:
 
-	PheremonesManager(const MazeProperties& props) 
+	PheremonesManager(const MazeProperties& props)
 	{
 		m_mazeProps = props;
 
 		for (int i = 0; i < props.mazeDimensions.x * props.mazeDimensions.y; i++) {
-			m_pheromones.push_back((float)rand()/(float)RAND_MAX);
+			m_pheromones.push_back((float)rand() / (float)RAND_MAX);
 		}
-		
+
 
 		// --------- Batch renderer initialisation
 
@@ -131,13 +139,16 @@ public:
 		Renderer::VertexBufferLayout layout;
 		layout.push<float>(3);		// Position
 		layout.push<float>(3);		// Color
+		layout.push<float>(2);		// uv
 
 
 
 		m_renderer.m_IBO = Renderer::IndexBufferObject(indices, MaxIndicesCount);
-
-
 		m_renderer.m_VAO.addBuffer(m_renderer.m_VBO, layout, m_renderer.m_IBO);
+
+		m_renderer.shader.bind();
+		m_renderer.shader.setUniform1i("u_texture", 0);
+		m_renderer.shader.unbind();
 
 
 
@@ -153,6 +164,11 @@ public:
 
 	void step(float delta, const glm::vec3& lookAt) {
 
+		m_realtime += delta;
+		m_renderer.shader.bind();
+		m_renderer.shader.setUniform1f("u_time", m_realtime);
+		m_renderer.shader.unbind();
+
 		m_renderer.m_bufferPtr = m_renderer.m_buffer;
 		prepareRendering(delta, lookAt);
 
@@ -162,27 +178,26 @@ public:
 		m_renderer.m_VAO.sendToGPU(size, m_renderer.m_buffer);
 	}
 
-	void render(const Renderer::Camera& camera) 
+	void render(const Renderer::Camera& camera)
 	{
-
-		/*
-		float theta = 3.14f - camera.getYaw();
-		float c = cos(theta), s = sin(theta);
-		glm::mat2 facingCameraRotationMatrix = glm::mat2(c, s, -s, c);
-		*/
 
 
 
 
 		m_renderer.shader.bind();
 		m_renderer.shader.setUniformMat4f("u_VP", camera.getViewProjectionMatrix());
-		//m_renderer.shader.setUniformMat2f("u_R", facingCameraRotationMatrix);
+		m_texture.bind(0);
 
-		glDisable(GL_CULL_FACE);
+		glDepthMask(GL_FALSE);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
 
 		m_renderer.m_VAO.bind();
 		m_renderer.m_IBO.bind();
 		glDrawElements(GL_TRIANGLES, m_renderer.m_indexCount, GL_UNSIGNED_INT, nullptr);
+
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glEnable(GL_DEPTH_TEST);
+		glDepthMask(GL_TRUE);
 
 		m_renderer.m_indexCount = 0;
 		m_renderer.m_VAO.unbind();
@@ -190,89 +205,100 @@ public:
 
 	}
 
-	
+
 private:
 
-		void prepareRendering(float delta, const glm::vec3& playerPosition)
-		{
+	void prepareRendering(float delta, const glm::vec3& playerPosition)
+	{
 
 
-			for (unsigned int y = 0; y < m_mazeProps.mazeDimensions.y; y++) {
+		for (unsigned int y = 0; y < m_mazeProps.mazeDimensions.y; y++) {
 
-				for (unsigned int x = 0; x < m_mazeProps.mazeDimensions.x; x++) {
+			for (unsigned int x = 0; x < m_mazeProps.mazeDimensions.x; x++) {
 
-					int index = y * m_mazeProps.mazeDimensions.x + x;
-					float value = m_pheromones[index];
-					glm::vec3 position = computePheromonePosition({ x,y });
+				int index = y * m_mazeProps.mazeDimensions.x + x;
+				float value = m_pheromones[index];
+				glm::vec3 position = computePheromonePosition({ x,y });
 
 
-					drawPheromone(position, {value, value, value}, {2,2,2}, playerPosition);
+				drawPheromone(position, glm::lerp({5,0,3}, glm::vec3{0,0,0}, value), glm::vec3(6) * value + glm::vec3(1), playerPosition);
 
-				}
 			}
-
 		}
 
-		inline glm::vec3 computePheromonePosition(const glm::uvec2& tile) {
+	}
 
-			float x = (0.5 + tile.x) * (m_mazeProps.corridorSpace + m_mazeProps.wallSize);
-			float y = 3;
-			float z = (0.5 + tile.y) * (m_mazeProps.corridorSpace + m_mazeProps.wallSize);
+	inline glm::vec3 computePheromonePosition(const glm::uvec2& tile) {
 
-			glm::vec3 res = m_mazeProps.startingPoint + glm::vec3{x, y, z};
+		float x = (0.5 + tile.x) * (m_mazeProps.corridorSpace);
+		float y = 3;
+		float z = (0.5 + tile.y) * (m_mazeProps.corridorSpace);
 
-			return res;
-		}
+		glm::vec3 res = m_mazeProps.startingPoint + glm::vec3{ x, y, z };
 
-		inline void drawPheromone(const glm::vec3& position, const glm::vec3& colors, const glm::vec3& size, const glm::vec3& playerPosition) {
-			glm::vec3 dir = glm::normalize(playerPosition - position);
-			glm::vec3 v = glm::normalize(glm::cross(dir, glm::vec3(0, 1, 0)));
-			glm::vec3 u = glm::normalize(glm::cross(v, dir));
+		return res;
+	}
 
-			// the model is a plane facing -z, centered on the origin
-			glm::vec3 v_positions[4]{
-				{ -size.x*.5f, -size.y*.5f, 0 },
-				{ +size.x*.5f, -size.y*.5f, 0 },
-				{ +size.x*.5f, +size.y*.5f, 0 },
-				{ -size.x*.5f, +size.y*.5f, 0 },
-			};
+	inline void drawPheromone(const glm::vec3& position, const glm::vec3& colors, const glm::vec3& size, const glm::vec3& playerPosition) {
+		glm::vec3 dir = glm::normalize(playerPosition - position);
+		glm::vec3 v = glm::normalize(glm::cross(dir, glm::vec3(0, 1, 0)));
+		glm::vec3 u = glm::normalize(glm::cross(v, dir));
 
-			// rotate it so that it faces the camera
-			glm::mat3 P = {
-				u,
-				v,
-				dir,
-			};
+		// the model is a plane facing -z, centered on the origin
+		glm::vec3 v_positions[4]{
+			{ -size.x * .5f, -size.y * .5f, 0 },
+			{ +size.x * .5f, -size.y * .5f, 0 },
+			{ +size.x * .5f, +size.y * .5f, 0 },
+			{ -size.x * .5f, +size.y * .5f, 0 },
+		};
 
-			// and also add its world position (this is basically the M matrix precomputed)
-			v_positions[0] = P * v_positions[0] + position;
-			v_positions[1] = P * v_positions[1] + position;
-			v_positions[2] = P * v_positions[2] + position;
-			v_positions[3] = P * v_positions[3] + position;
+		glm::vec2 v_uv[4]{
+			{ 0,0 },
+			{ 1,0 },
+			{ 1,1 },
+			{ 0,1 },
+		};
 
-			// Bottom left
-			m_renderer.m_bufferPtr->position = v_positions[0];// 2D only
-			m_renderer.m_bufferPtr->color = colors;
-			m_renderer.m_bufferPtr++;
+		// rotate it so that it faces the camera
+		glm::mat3 P = {
+			u,
+			v,
+			dir,
+		};
 
-			// Bottom right
-			m_renderer.m_bufferPtr->position = v_positions[1]; // 2D only
-			m_renderer.m_bufferPtr->color = colors;
-			m_renderer.m_bufferPtr++;
+		// and also add its world position (this is basically the M matrix precomputed)
+		v_positions[0] = P * v_positions[0] + position;
+		v_positions[1] = P * v_positions[1] + position;
+		v_positions[2] = P * v_positions[2] + position;
+		v_positions[3] = P * v_positions[3] + position;
 
-			//top right
-			m_renderer.m_bufferPtr->position = v_positions[2]; // 2D only
-			m_renderer.m_bufferPtr->color = colors;
-			m_renderer.m_bufferPtr++;
+		// Bottom left
+		m_renderer.m_bufferPtr->position = v_positions[0];// 2D only
+		m_renderer.m_bufferPtr->color = colors;
+		m_renderer.m_bufferPtr->uv = v_uv[0];
+		m_renderer.m_bufferPtr++;
 
-			// top left
-			m_renderer.m_bufferPtr->position = v_positions[3]; // 2D only
-			m_renderer.m_bufferPtr->color = colors;
-			m_renderer.m_bufferPtr++;
+		// Bottom right
+		m_renderer.m_bufferPtr->position = v_positions[1]; // 2D only
+		m_renderer.m_bufferPtr->color = colors;
+		m_renderer.m_bufferPtr->uv = v_uv[1];
+		m_renderer.m_bufferPtr++;
 
-			m_renderer.m_indexCount += 6;
+		//top right
+		m_renderer.m_bufferPtr->position = v_positions[2]; // 2D only
+		m_renderer.m_bufferPtr->color = colors;
+		m_renderer.m_bufferPtr->uv = v_uv[2];
+		m_renderer.m_bufferPtr++;
 
-		}
+		// top left
+		m_renderer.m_bufferPtr->position = v_positions[3]; // 2D only
+		m_renderer.m_bufferPtr->color = colors;
+		m_renderer.m_bufferPtr->uv = v_uv[3];
+		m_renderer.m_bufferPtr++;
+
+		m_renderer.m_indexCount += 6;
+
+	}
 
 
 
