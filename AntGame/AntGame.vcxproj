@@ -141,6 +141,7 @@
   <ItemGroup>
     <ClCompile Include="ants\GameLogic\AntsPlayer.cpp" />
     <ClCompile Include="ants\GameLogic\Pheremones.cpp" />
+    <ClCompile Include="ants\GameLogic\Score.cpp" />
     <ClCompile Include="ants\main.cpp" />
     <ClCompile Include="ants\Maze\MazeGeneration_proj\CException.cpp" />
     <ClCompile Include="ants\Maze\MazeGeneration_proj\CMaze.cpp" />
@@ -174,6 +175,7 @@
     <ClInclude Include="ants\Server\ServerInfos.h" />
     <ClInclude Include="ants\Maze\MazeMeshGenerator.h" />
     <ClInclude Include="ants\Maze\MazeTileSystem.h" />
+    <ClInclude Include="ants\GameLogic\Score.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

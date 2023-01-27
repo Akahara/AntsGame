@@ -1,6 +1,9 @@
 #pragma once
-#include "marble/Utils/Mathf.h"
+
 #include <glm/glm.hpp>
+
+#include "marble/Utils/Mathf.h"
+
 class MazeTileSystem
 {
 public:

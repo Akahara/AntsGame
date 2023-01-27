@@ -8,15 +8,11 @@
 #include "marble/world/Sky.h"
 
 #include "../Maze/MazeMeshGenerator.h"
-#include "../GameLogic/AntsPlayer.h"
-
-#include <glad/glad.h>
-#include <glm/gtc/type_ptr.hpp>
-
-#include "../Server/ServerInfos.h"
 #include "../Maze/MazeTileSystem.h"
-
+#include "../GameLogic/AntsPlayer.h"
+#include "../GameLogic/Score.h"
 #include "../GameLogic/Pheremones.h"
+#include "../Server/ServerInfos.h"
 
 #include "marble/abstraction/pipeline/VFXPipeline.h"
 
@@ -29,16 +25,14 @@ private:
 	bool       m_useDbgPlayer = false;
 	AntsPlayer m_player;
 	Player     m_debugPlayer;
+	Maze       m_maze;
+	ScoreManager m_score;
 
 	Terrain::Terrain  m_terrain;
-	Maze m_maze;
-
 	Renderer::Mesh    m_mazeMesh;
 	Renderer::Texture m_sandTexture = Renderer::Texture("res/textures/sand1.jpg");
 
 	visualEffects::VFXPipeline m_pipeline;
-
-	glm::vec2 m_tpssettings = { 5,1.4 };
 
 	PheremonesManager m_pManager{ 
 		PheremonesManager::MazeProperties{
@@ -65,8 +59,10 @@ public:
 
 		m_maze = *generateMazeCPP(&params); // this interface is... bad to say the least, if you go to the body of generateMazeCPP you will find
 											// an O(n) memory leak, what a performance!
+		m_maze.tiles[1] |= MazeMeshGenerator::HAS_FOOD;
 		m_mazeMesh = MazeMeshGenerator::generateMazeMesh(m_maze);
 		m_player.setMaze(m_maze);
+		m_score.setMaze(m_maze);
 
 		int samplers[8] = { 0,1,2,3,4,5,6,7 };
 		Renderer::Shader& meshShader = Renderer::rebuildStandardMeshShader(Renderer::ShaderFactory()
@@ -87,11 +83,9 @@ public:
 		meshShader.setUniform3f("u_SunPos", 1000, 1000, 1000);
 		Renderer::Shader::unbind();
 
-
 		generateTerrain();		
 
 		m_pipeline.registerEffect<visualEffects::Bloom>();
-
 	}
 
 	void generateTerrain()
@@ -120,8 +114,8 @@ public:
 	}
 
 
-	void step(float delta) override {
-
+	void step(float delta) override
+	{
 		m_realTime += delta;
 
 		glm::vec3 playerPos = m_player.getPosition();
@@ -134,24 +128,21 @@ public:
 			//m_pManager.setPheromones(infos.pheromonesValues);
 		}
 
-		
 		if (m_terrain.isInSamplableRegion(playerPos.x, playerPos.z) && !m_useDbgPlayer)
 			playerPos.y = m_terrain.getHeight(playerPos.x, playerPos.z) +1.5;
 		
-		
-		
-
 		m_player.setPosition(playerPos);
 		m_player.updateCamera();
 
 		if (m_useDbgPlayer) {
 			m_debugPlayer.step(delta);
 			m_pManager.step(delta, m_debugPlayer.getCamera().getPosition());
-		}
-		else {
+		} else {
 			m_player.step(delta);
 			m_pManager.step(delta, m_player.getCamera().getPosition());
 		}
+
+		m_score.step(m_player.getPosition());
 	}
 
 	void onRender() override
@@ -176,29 +167,29 @@ public:
 		Renderer::renderMesh(camera, { 0,0,0 }, { 1,1,1 }, m_mazeMesh);
 		
 		m_player.render(camera);
-
-		m_pManager.render(camera);
+		m_pManager.render(camera); // TODO animate collected pheromones
 		m_sky.render(camera);
-
 
 		m_pipeline.unbind();
 		m_pipeline.renderPipeline();
-		
-		
-
 	}
 
 	void onImGuiRender() override
 	{
 		ImGui::Text("This is the playground for tests ! ");
 
-		if (ImGui::DragFloat2("TPS Settings", &m_tpssettings.x, 0.2f, 0.5f, 5)) {
-			m_player.setTPSDistances(m_tpssettings);
-		}
-
 		ImGui::Checkbox("Use debug player", &m_useDbgPlayer);
 	
 		m_pipeline.onImGuiRender();
+
+		ImGui::SetNextWindowPos({ 0, 0 });
+		ImGui::SetNextWindowSize({ 600, 200 });
+		if (ImGui::Begin("Score!", nullptr, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoDecoration)) {
+		  ImGui::SetWindowFontScale(4);
+		  //ImGui::PushFont(nullptr); // TODO set the score's font
+		  ImGui::Text("SCORE: %u", m_score.getScore());
+		}
+		ImGui::End();
 	}
 
 
