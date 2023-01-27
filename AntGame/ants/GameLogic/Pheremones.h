@@ -17,6 +17,7 @@ static std::string vs = R"glsl(
 			out vec2 v_TexCoord;
 			out vec4 v_Color;
 			out vec2 o_uv;
+			out vec4 o_pos;
 
 			uniform mat4 u_VP;
 			uniform float u_time;
@@ -25,9 +26,10 @@ static std::string vs = R"glsl(
 	
 				vec4 vertex = vec4(position, 1);
 				vertex.y += cos(u_time);
-				gl_Position = u_VP * vertex;
 				o_uv = i_uv;
 				v_Color = vec4(aColor,1.F);
+				o_pos =  u_VP * vertex;
+				gl_Position = o_pos;
 			};
 		)glsl";
 
@@ -38,12 +40,34 @@ static std::string fs = R"glsl(
 
 			in vec4 v_Color;
 			in vec2 o_uv;
+			in vec4 o_pos;
+		
 			uniform sampler2D u_texture;
+			uniform sampler2D u_dudvMap;
+			uniform float u_time;
+			uniform float u_moveFactor;
 
 			void main()
 			{
-				color = texture(u_texture, o_uv);
-				color.rgb += v_Color.rgb; 
+
+				vec2 screenspace = ((o_pos.xy/o_pos.w)+1) * 0.5;
+
+				vec2 tmp = vec2(screenspace.x,  screenspace.y);
+
+				vec2 distortedTexCoords = texture(u_dudvMap, vec2(o_uv.x + u_moveFactor, o_uv.y)).rg*0.1;
+				distortedTexCoords = o_uv + vec2(distortedTexCoords.x, distortedTexCoords.y+u_moveFactor);
+				vec2 distortion = (texture(u_dudvMap, distortedTexCoords).rg * 2.0 - 1.0) * 0.04f;
+
+				tmp += distortion;
+	
+
+				color.a = texture(u_texture, o_uv).a;
+				vec3 dis = texture(u_dudvMap, tmp).rgb;
+
+				color.rgb = mix(dis,v_Color.rgb,0.7);
+				color.rgb *= 4.f;
+
+
 			};
 		)glsl";
 
@@ -57,7 +81,9 @@ private:
 	std::vector<float> m_pheromones;
 
 	Renderer::Texture m_texture = Renderer::Texture("res/textures/pheromones.png");
+	Renderer::Texture m_distortion = Renderer::Texture("res/textures/dudvWater.png");
 	float m_realtime;
+	float m_moveFactor = 0;
 
 	struct QuadVertex {
 
@@ -148,6 +174,7 @@ public:
 
 		m_renderer.shader.bind();
 		m_renderer.shader.setUniform1i("u_texture", 0);
+		m_renderer.shader.setUniform1i("u_dudvMap", 1);
 		m_renderer.shader.unbind();
 
 
@@ -167,6 +194,13 @@ public:
 		m_realtime += delta;
 		m_renderer.shader.bind();
 		m_renderer.shader.setUniform1f("u_time", m_realtime);
+
+		m_moveFactor += 0.15 * delta;
+		m_moveFactor = std::fmod(m_moveFactor, 1.f);
+		m_renderer.shader.bind();
+		m_renderer.shader.setUniform1f("u_moveFactor", m_moveFactor);
+
+
 		m_renderer.shader.unbind();
 
 		m_renderer.m_bufferPtr = m_renderer.m_buffer;
@@ -182,11 +216,10 @@ public:
 	{
 
 
-
-
 		m_renderer.shader.bind();
 		m_renderer.shader.setUniformMat4f("u_VP", camera.getViewProjectionMatrix());
 		m_texture.bind(0);
+		m_distortion.bind(1);
 
 		glDepthMask(GL_FALSE);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
@@ -221,7 +254,7 @@ private:
 				glm::vec3 position = computePheromonePosition({ x,y });
 
 
-				drawPheromone(position, glm::lerp({5,0,3}, glm::vec3{0,0,0}, value), glm::vec3(6) * value + glm::vec3(1), playerPosition);
+				drawPheromone(position, glm::lerp({1,0,0.6}, glm::vec3{0,0,0}, value), glm::lerp({ 4,4,4 }, glm::vec3{1,1,1}, value), playerPosition);
 
 			}
 		}
