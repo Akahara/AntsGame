@@ -7,6 +7,7 @@
 #include "marble/abstraction/UnifiedRenderer.h"
 #include <glad/glad.h>
 
+
 static std::string vs = R"glsl(
 			#version 330 core
 
@@ -44,8 +45,11 @@ static std::string fs = R"glsl(
 		
 			uniform sampler2D u_texture;
 			uniform sampler2D u_dudvMap;
+			uniform sampler2D u_normal;
 			uniform float u_time;
 			uniform float u_moveFactor;
+
+			vec3 sunPos = vec3(100,100,100);
 
 			void main()
 			{
@@ -59,6 +63,8 @@ static std::string fs = R"glsl(
 				vec2 distortion = (texture(u_dudvMap, distortedTexCoords).rg * 2.0 - 1.0) * 0.04f;
 
 				tmp += distortion;
+
+
 	
 
 				color.a = texture(u_texture, o_uv).a;
@@ -82,6 +88,7 @@ private:
 
 	Renderer::Texture m_texture = Renderer::Texture("res/textures/pheromones.png");
 	Renderer::Texture m_distortion = Renderer::Texture("res/textures/dudvWater.png");
+	Renderer::Texture m_normal = Renderer::Texture("res/textures/waterNormal.png");
 	float m_realtime;
 	float m_moveFactor = 0;
 
@@ -175,6 +182,7 @@ public:
 		m_renderer.shader.bind();
 		m_renderer.shader.setUniform1i("u_texture", 0);
 		m_renderer.shader.setUniform1i("u_dudvMap", 1);
+		m_renderer.shader.setUniform1i("u_normal", 2);
 		m_renderer.shader.unbind();
 
 
@@ -220,6 +228,7 @@ public:
 		m_renderer.shader.setUniformMat4f("u_VP", camera.getViewProjectionMatrix());
 		m_texture.bind(0);
 		m_distortion.bind(1);
+		m_normal.bind(2);
 
 		glDepthMask(GL_FALSE);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE);
