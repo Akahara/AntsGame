@@ -6,6 +6,8 @@
 
 #include "marble/abstraction/UnifiedRenderer.h"
 #include <glad/glad.h>
+#include "Score.h"
+
 
 
 static std::string vs = R"glsl(
@@ -68,10 +70,11 @@ static std::string fs = R"glsl(
 	
 
 				color.a = texture(u_texture, o_uv).a;
+				color.a = smoothstep(0.9,0.8, length(o_uv*2-1.f));
 				vec3 dis = texture(u_dudvMap, tmp).rgb;
 
-				color.rgb = mix(dis,v_Color.rgb,0.7);
-				color.rgb *= 4.f;
+				color.rgb = mix(vec3(dis.r/2.F),v_Color.rgb,0.7);
+				color.rgb *= 2.f;
 
 
 			};
@@ -120,6 +123,7 @@ private:
 	size_t MaxTextures;
 
 public:
+
 	struct MazeProperties {
 
 		glm::uvec2 mazeDimensions;
@@ -128,6 +132,8 @@ public:
 		float corridorSpace;
 
 	} m_mazeProps;
+
+	ScoreManager* scoreSystem = nullptr;
 
 
 public:
@@ -263,7 +269,11 @@ private:
 				glm::vec3 position = computePheromonePosition({ x,y });
 
 
-				drawPheromone(position, glm::lerp({1,0,0.6}, glm::vec3{0,0,0}, value), glm::lerp({ 4,4,4 }, glm::vec3{1,1,1}, value), playerPosition);
+				bool active = (scoreSystem) ? scoreSystem->isPickupActive({ x, y }) : false;
+				glm::vec3 color = (active) ? glm::lerp({ 2,0,1.2 }, glm::vec3{ 0,0,0 }, value) : glm::vec3{0,0,0};
+				
+				//glm::vec3 color = glm::lerp({ 1,0,0.6 }, glm::vec3{ 0,0,0 }, value);
+				drawPheromone(position, color, glm::lerp({ 4,4,4 }, glm::vec3{1,1,1}, value), playerPosition);
 
 			}
 		}
