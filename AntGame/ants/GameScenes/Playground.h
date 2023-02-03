@@ -86,6 +86,7 @@ public:
 		generateTerrain();		
 
 		m_pipeline.registerEffect<visualEffects::Bloom>();
+		m_pManager.scoreSystem = &m_score;
 	}
 
 	void generateTerrain()

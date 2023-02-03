@@ -1,6 +1,6 @@
-#include <thread>
-#include <chrono>
-
+#include "Server/Main.h"
+#include <iostream>
+/*
 #include "marble/vendor/imgui/imgui.h"
 #include "marble/vendor/imgui/imgui_impl_glfw.h"
 #include "marble/vendor/imgui/imgui_impl_opengl3.h"
@@ -15,14 +15,18 @@
 
 #include "GameScenes/Playground.h"
 
+
+
 inline long long nanoTime()
 {
   using namespace std::chrono;
   return duration_cast<nanoseconds>(high_resolution_clock::now().time_since_epoch()).count();
 }
 
+*/
 int main()
 {
+    /*
   Window::createWindow(16 * 70, 9 * 70, "test");
 
   Window::setVisible(true);
@@ -93,6 +97,25 @@ int main()
   ImGui_ImplGlfw_Shutdown();
   ImGui_ImplOpenGL3_Shutdown();
   ImGui::DestroyContext();
+    */
+
+    std::string adress = "192.168.1.23";
+    unsigned short port = 88000;
+    boost::asio::io_context io_context1;
+
+    Client client1{ io_context1, adress, port };
+
+    constexpr unsigned char NORTH = 1;
+    constexpr unsigned char EAST = 2;
+    constexpr unsigned char SOUTH = 4;
+    constexpr unsigned char WEST = 8;
+    constexpr unsigned char HAS_FOOD = 16;
+    constexpr unsigned char HAS_NEST = 32;
+
+    client1.join(1);
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(1500));  
+
 
   return 0;
 }

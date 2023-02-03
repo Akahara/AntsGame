@@ -5,15 +5,13 @@
 #include "CTile.h"
 #include "CMazeGenerator.h"
 
-
-#define AllocationFailed 1
-#define InvalidSize 2
-#define InvalidPosition 3
-#define TooMuchFood 4
-
 #ifdef __cplusplus // If we use C++
 
 #include <cstdint>
+
+#define AllocationFailed 1
+#define InvalidSize 2
+#define InvalidNestPosition 3
 
 struct Maze;
 
@@ -39,12 +37,14 @@ public:
 		- Error 1 : AllocationFailed
 	*/
 	CMaze();
+
+
 	/*
 	Create a maze from parameters
-	In :
+	In : 
 		- nbLineIn, nbColumnIn : uint32_t, size of the maze, both must be >= 2
 		- nestLineIn, nestColumnIn : uint32_t, position of the nest in the maze, must respectively be < to nbLineIn and nbColumnIn
-		- nbFood : uint32_t, number of food sources in the maze, must be <= to (nbLine * nbColumn) - (((nbLine / 2) - 1) * ((nbColumn / 2) - 1) * 2)
+		- nbFood : uint32_t, number of food sources in the maze
 		- difficulty : uint32_t, difficulty of the maze
 		- algoToUse : uint32_t, algorithm to use to generate the maze, liste avaiable in the CMazeGenerator.h file
 	Preconditions : /
@@ -53,8 +53,7 @@ public:
 		- The maze has been successfully created OR
 		- Error 1 : AllocationFailed  OR
 		- Error 2 : InvalidSize, the size of the maze is invalid OR
-		- Error 3 : InvalidPosition, the position of the nest is not in the maze OR
-		- Error 4 : TooMuchFood, ther is too much food for this size maze
+		- Error 3 : InvalidNestPosition, the position of the nest is not in the maze
 	*/
 	CMaze(uint32_t nbLineIn, uint32_t nbColumnIn, uint32_t nestLineIn, uint32_t nestColumnIn, uint32_t nbFood, uint32_t difficulty, uint32_t algoToUse);
 
@@ -101,30 +100,10 @@ public:
 	
 	/*
 	Return a pointer to a copy of the tile at the set coordinates
-	In :
-		- line, column : uint32_t, coordinates of the tile, must be respectively < nbLine and nbColumn
-	Preconditions : /
-	Out : 
-		- CTile* : the copy of the tile
-	Postcondition :
-		- The tile has been successfully returned OR
-		- Error 1 : AllocationFailed OR
-		- Error 3 : InvalidPosition, the coordinates of the tile is incorect
 	*/
 	CTile* getTile(uint32_t line, uint32_t column);
 
 
-	/*
-	Replace a tile of the maze at the passed position with a copy of the one passed in parameter
-	In :
-		- line, column : uint32_t, coordinates of the tile, must be respectively < nbLine and nbColumn
-	Preconditions : /
-	Out : /
-	Postcondition :
-		- The tile has been successfully replaced OR
-		- Error 1 : AllocationFailed OR
-		- Error 3 : InvalidPosition, the coordinates of the tile is incorect
-	*/
 	void setTile(uint32_t line, uint32_t column, CTile* tile);
 
 
@@ -145,9 +124,6 @@ public:
 	Maze* convertToMazeStruct();
 
 	/*
-	Print the maze in the console
-	F : Food, f : food with a wall under it
-	N : Nest, n : nest with a wall under it
 	*/
 	void printMaze();
 
