@@ -66,6 +66,9 @@
     <ClCompile Include="ants\Server\Server\Session.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ants\GameScenes\Scene.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />

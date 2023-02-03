@@ -6,14 +6,11 @@
 
 #include "marble/abstraction/Window.h"
 #include "marble/abstraction/Inputs.h"
-
-#include "marble/Sandbox/Scene.h"
 #include "marble/Utils/Debug.h"
 
-#include "marble/Sandbox/Tests.h"
-
+#include "GameScenes/Scene.h"
 #include "GameScenes/Playground.h"
-
+#include "GameScenes/Menu.h"
 
 
 inline long long nanoTime()
@@ -21,7 +18,6 @@ inline long long nanoTime()
   using namespace std::chrono;
   return duration_cast<nanoseconds>(high_resolution_clock::now().time_since_epoch()).count();
 }
-
 
 int main()
 {
@@ -40,15 +36,8 @@ int main()
 
   Renderer::SkyRenderer::init();
   Renderer::init();
-  SceneManager::init();
 
-
-  SceneManager::registerScene<Playground>("Playground");
-
-
-
-
-  SceneManager::switchToScene(1);
+  SceneManager::switchToScene(std::make_unique<Menu>());
 
   //===========================================================//
 

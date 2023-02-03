@@ -3,9 +3,12 @@
 #include <glad/glad.h>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "marble/Sandbox/Scene.h"
+#include "Scene.h"
+
 #include "marble/world/Player.h"
 #include "marble/world/Sky.h"
+#include "marble/World/TerrainGeneration/Terrain.h"
+#include "marble/World/TerrainGeneration/Noise.h"
 
 #include "../Maze/MazeMeshGenerator.h"
 #include "../Maze/FoodMeshGenerator.h"
@@ -39,6 +42,7 @@ private:
 	Terrain::Terrain  m_terrain;
 	Renderer::Mesh    m_mazeMesh;
 	Renderer::Texture m_sandTexture = Renderer::Texture("res/textures/sand1.jpg");
+	Renderer::Mesh    m_wallMesh;
 
 	visualEffects::VFXPipeline m_pipeline;
 
@@ -49,6 +53,8 @@ private:
 
 	Server::Client* m_client = nullptr; // might change if global state idk
 	server* m_server = nullptr; // might change if global state idk
+
+
 
 public:
 
@@ -90,8 +96,6 @@ public:
 
 		m_score.setMaze(m_maze);
 		m_pManager->scoreSystem = &m_score;
-		}
-
 		// Mesh and terration generation
 		{
 		m_mazeMesh = MazeMeshGenerator::generateMazeMesh(m_maze);
@@ -99,10 +103,14 @@ public:
 		std::for_each(m_fsources.begin(), m_fsources.end(), [&](const World::Prop& source) {m_props.feed(source); });
 		generateTerrain();
 		m_pipeline.registerEffect<visualEffects::Bloom>();
+		m_wallMesh = Renderer::loadMeshFromFile("res/meshes/wall.obj");
 		}
 
 		// Shader Factory
 		{
+
+
+		
 
 		int samplers[8] = { 0,1,2,3,4,5,6,7 };
 		Renderer::Shader& meshShader = Renderer::rebuildStandardMeshShader(Renderer::ShaderFactory()
@@ -200,7 +208,7 @@ public:
 
 		m_score.step(m_player.getPosition());
 	}
-
+		
 	void onRender() override
 	{
 		const Renderer::Camera& camera = m_useDbgPlayer ? m_debugPlayer.getCamera() : m_player.getCamera();
@@ -223,7 +231,7 @@ public:
 		}
 
 		Renderer::renderMesh(camera, { 0,0,0 }, { 1,1,1 }, m_mazeMesh);
-
+		m_props.render(camera);
 		m_player.render(camera);
 		m_props.render(camera);
 		m_sky.render(camera);
@@ -259,8 +267,6 @@ public:
 		ImGui::End();
 	}
 
-
-	CAMERA_NOT_DEFINED();
 };
 
 
