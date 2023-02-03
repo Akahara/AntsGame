@@ -12,7 +12,7 @@
 #include <boost/uuid/uuid.hpp>
 #include <memory>
 #include "../JSON.h"
-#include "../Maze/libAntMaze.h"
+#include "../AntGame/ants/Maze/MazeGeneration_proj/libAntMaze.h"
 #include "session.h"
 #include "player.h"
 #include "constants.h"
@@ -32,7 +32,7 @@ private:
     /**
      * @brief A vector of players in the game.
      */
-    std::vector<Player> p_players;
+    std::vector<Server::Player> p_players;
 
     /**
      * @brief The maximum number of players allowed in the game.

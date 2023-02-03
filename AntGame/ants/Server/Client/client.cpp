@@ -22,11 +22,11 @@ using std::placeholders::_2;
 
 bool VERBOSE = true;
 
+using namespace Server; 
+
 Client::Client(boost::asio::io_context& io_context1, std::string _adress, unsigned short _port) : p_io_context{ io_context1 }, p_socket_client{ io_context1 } {
     // Connect client to the server
-    std::cout << "bun" << std::endl;
     p_socket_client.connect(tcp::endpoint(boost::asio::ip::address::from_string(_adress), _port));
-    std::cout << "bun" << std::endl;
     p_uuid = NULL_UUID;
 
     // Start listenning on socket

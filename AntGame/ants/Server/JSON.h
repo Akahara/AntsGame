@@ -5,11 +5,12 @@
 
 #pragma once
 
+#define _CRT_SECURE_NO_WARNINGS
 #include <boost/property_tree/ptree.hpp>
 #include <boost/uuid/uuid.hpp>
 #include <vector>
 #include <iostream>
-#include "Maze/libAntMaze.h"
+#include "../Maze/MazeGeneration_proj/libAntMaze.h"
 
  /**
   * @namespace JSON

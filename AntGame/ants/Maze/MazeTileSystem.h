@@ -17,13 +17,13 @@ public:
 
 
 		float x = float(position.x - startOfMaze.x) / mazeLength;
-		unsigned int x_tile = x * (mazeDimensions.x - 1);
+		unsigned int x_tile = (unsigned int)(x * (mazeDimensions.x - 1));
 
 
 		float y = float(position.z - startOfMaze.z) / mazeWidth;
 
 		
-		unsigned int y_tile = y * (mazeDimensions.y - 1);
+		unsigned int y_tile = (unsigned int)(y * (mazeDimensions.y - 1));
 
 		return { x_tile, y_tile };
 

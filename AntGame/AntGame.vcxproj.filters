@@ -48,6 +48,24 @@
     <ClCompile Include="ants\GameLogic\Score.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ants\Server\Client\client.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ants\Server\JSON.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ants\Server\Server\Constants.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ants\Server\Server\Game.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ants\Server\Server\Server.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ants\Server\Server\Session.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
@@ -65,10 +83,10 @@
     <ClInclude Include="ants\Server\ServerInfos.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ants\Food.h">
+    <ClInclude Include="ants\GameLogic\Food.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ants\GameManager.h">
+    <ClInclude Include="ants\GameLogic\GameManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ants\Maze\MazeMeshGenerator.h">
@@ -99,6 +117,27 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ants\GameLogic\Score.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ants\Server\Client\client.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ants\Server\JSON.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ants\Server\Server\constants.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ants\Server\Server\Game.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ants\Server\Server\player.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ants\Server\Server\server.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ants\Server\Server\session.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

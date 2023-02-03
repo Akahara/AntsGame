@@ -142,7 +142,7 @@ public:
 	{
 		m_mazeProps = props;
 
-		for (int i = 0; i < props.mazeDimensions.x * props.mazeDimensions.y; i++) {
+		for (unsigned int i = 0; i < props.mazeDimensions.x * props.mazeDimensions.y; i++) {
 			m_pheromones.push_back((float)rand() / (float)RAND_MAX);
 		}
 
@@ -159,7 +159,7 @@ public:
 		unsigned int* indices = new unsigned int[MaxIndicesCount];
 		unsigned int offset = 0;
 
-		for (int i = 0; i < MaxIndicesCount; i += 6) {
+		for (unsigned int i = 0; i < MaxIndicesCount; i += 6) {
 
 			indices[i + 0] = 0 + offset;
 			indices[i + 1] = 1 + offset;
@@ -209,7 +209,7 @@ public:
 		m_renderer.shader.bind();
 		m_renderer.shader.setUniform1f("u_time", m_realtime);
 
-		m_moveFactor += 0.15 * delta;
+		m_moveFactor += 0.15f * delta;
 		m_moveFactor = std::fmod(m_moveFactor, 1.f);
 		m_renderer.shader.bind();
 		m_renderer.shader.setUniform1f("u_moveFactor", m_moveFactor);
@@ -282,9 +282,9 @@ private:
 
 	inline glm::vec3 computePheromonePosition(const glm::uvec2& tile) {
 
-		float x = (0.5 + tile.x) * (m_mazeProps.corridorSpace);
+		float x = (0.5f + tile.x) * (m_mazeProps.corridorSpace);
 		float y = 3;
-		float z = (0.5 + tile.y) * (m_mazeProps.corridorSpace);
+		float z = (0.5f + tile.y) * (m_mazeProps.corridorSpace);
 
 		glm::vec3 res = m_mazeProps.startingPoint + glm::vec3{ x, y, z };
 

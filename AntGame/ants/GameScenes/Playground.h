@@ -8,11 +8,15 @@
 #include "marble/world/Sky.h"
 
 #include "../Maze/MazeMeshGenerator.h"
+#include "../Maze/MazeGeneration_proj/libAntMaze.h"
 #include "../Maze/MazeTileSystem.h"
 #include "../GameLogic/AntsPlayer.h"
 #include "../GameLogic/Score.h"
 #include "../GameLogic/Pheremones.h"
 #include "../Server/ServerInfos.h"
+#include "../Server/Client/client.h"
+#include "../Server/hostDebug.h"
+#include "../Server/Server/server.h"
 
 #include "marble/abstraction/pipeline/VFXPipeline.h"
 
@@ -43,10 +47,24 @@ private:
 	};
 
 
+	
+	Server::Client* m_client = nullptr; // light change if global state idk
+
+
+
+
 public:
 
 	Playground() 
 	{
+		/* WIP
+		if (!m_client) {
+			Server::startLocalServer();
+			Server::setClientConnexion(m_client);
+			m_client->join(1);
+		}
+		*/
+
 		constexpr unsigned int mazeSize = 20;
 		ParamMaze params{
 			mazeSize,
@@ -123,6 +141,8 @@ public:
 		glm::uvec2 pos = MazeTileSystem::getTileCoordinates(playerPos, { 20,20 }, { 0,0,0 }, 25.f /* CORRIDOR+WALSIZE */ );
 		
 		if (pos != m_player.getTile()) {
+
+			Server::Client::MOVE_LIST direction = Server::computeMoveDirection(m_player.getTile(), pos);
 			m_player.setTile(pos);
 			Server::sendInfos(pos); // mock
 			auto infos = Server::pullServerInfos();
@@ -130,7 +150,7 @@ public:
 		}
 
 		if (m_terrain.isInSamplableRegion(playerPos.x, playerPos.z) && !m_useDbgPlayer)
-			playerPos.y = m_terrain.getHeight(playerPos.x, playerPos.z) +1.5;
+			playerPos.y = m_terrain.getHeight(playerPos.x, playerPos.z) + 1.5f;
 		
 		m_player.setPosition(playerPos);
 		m_player.updateCamera();
@@ -138,7 +158,8 @@ public:
 		if (m_useDbgPlayer) {
 			m_debugPlayer.step(delta);
 			m_pManager.step(delta, m_debugPlayer.getCamera().getPosition());
-		} else {
+		} 
+		else {
 			m_player.step(delta);
 			m_pManager.step(delta, m_player.getCamera().getPosition());
 		}

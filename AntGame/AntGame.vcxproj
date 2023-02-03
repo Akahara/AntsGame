@@ -71,7 +71,7 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)\MarbleEngine\Libraries\include;$(LibraryPath);$(IncludePath)</IncludePath>
+    <IncludePath>C:\programming\boost;$(SolutionDir)\MarbleEngine\Libraries\include;$(LibraryPath);$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(SolutionDir)\MarbleEngine\Libraries\include;$(LibraryPath);$(IncludePath)</IncludePath>
@@ -150,6 +150,12 @@
     <ClCompile Include="ants\Maze\MazeGeneration_proj\libAntMaze.cpp" />
     <ClCompile Include="ants\Maze\MazeMeshGenerator.cpp" />
     <ClCompile Include="ants\Maze\MazeTileSystem.cpp" />
+    <ClCompile Include="ants\Server\Client\client.cpp" />
+    <ClCompile Include="ants\Server\JSON.cpp" />
+    <ClCompile Include="ants\Server\Server\Constants.cpp" />
+    <ClCompile Include="ants\Server\Server\Game.cpp" />
+    <ClCompile Include="ants\Server\Server\Server.cpp" />
+    <ClCompile Include="ants\Server\Server\Session.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\MarbleEngine\MarbleEngine.vcxproj">
@@ -161,9 +167,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ants\GameLogic\AntsPlayer.h" />
-    <ClInclude Include="ants\Food.h" />
+    <ClInclude Include="ants\GameLogic\Food.h" />
     <ClInclude Include="ants\GameLogic\Pheremones.h" />
-    <ClInclude Include="ants\GameManager.h" />
+    <ClInclude Include="ants\GameLogic\GameManager.h" />
     <ClInclude Include="ants\GameScenes\InGame.h" />
     <ClInclude Include="ants\GameScenes\Menu.h" />
     <ClInclude Include="ants\GameScenes\Playground.h" />
@@ -172,10 +178,17 @@
     <ClInclude Include="ants\Maze\MazeGeneration_proj\CMazeGenerator.h" />
     <ClInclude Include="ants\Maze\MazeGeneration_proj\CTile.h" />
     <ClInclude Include="ants\Maze\MazeGeneration_proj\libAntMaze.h" />
+    <ClInclude Include="ants\Server\Client\client.h" />
+    <ClInclude Include="ants\Server\JSON.h" />
     <ClInclude Include="ants\Server\ServerInfos.h" />
     <ClInclude Include="ants\Maze\MazeMeshGenerator.h" />
     <ClInclude Include="ants\Maze\MazeTileSystem.h" />
     <ClInclude Include="ants\GameLogic\Score.h" />
+    <ClInclude Include="ants\Server\Server\constants.h" />
+    <ClInclude Include="ants\Server\Server\Game.h" />
+    <ClInclude Include="ants\Server\Server\player.h" />
+    <ClInclude Include="ants\Server\Server\server.h" />
+    <ClInclude Include="ants\Server\Server\session.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

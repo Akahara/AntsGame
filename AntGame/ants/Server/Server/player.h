@@ -8,6 +8,9 @@
 #include <boost/uuid/uuid.hpp>
 #include "session.h"
 
+namespace Server {
+
+
  /**
   * @struct Player
   * @brief A struct representing a player.
@@ -40,3 +43,5 @@ struct Player {
     std::shared_ptr<session> _session;
 };
 
+
+}

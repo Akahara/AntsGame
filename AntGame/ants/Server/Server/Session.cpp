@@ -25,6 +25,7 @@ using boost::system::system_error;
 using std::placeholders::_1;
 using std::placeholders::_2;
 
+
 session::session(io_context& service, server* _server) : p_socket{ service }, p_origin{ _server } {
     
 }
