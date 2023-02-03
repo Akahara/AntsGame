@@ -13,27 +13,34 @@ namespace Server {
 
         JSON::LoadOptionFile("../AntGame/ants/Server/options.json");
 
-        boost::asio::io_context context{};
+        boost::asio::io_context* context = new boost::asio::io_context();
 
-        server server{ context, (unsigned short)88000 };
+        server* s = new server( *context, (unsigned short)88000 );
 
         // -------------------------------------------------------------------------
-
-        auto t1 = std::thread([&]
+        
+        auto t1 = std::thread([=]
             {
-                context.run();
+                context->run();
             });
-
+        
         // -------------------------------------------------------------------------
 
-        while (true) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+        
+        std::thread([=] {
 
-            //update all games and send pheromons vector to all connected players
-            for (game* game : server.getListofAvailaibleGames()) {
-                game->decreasePheromons();
+            while (true) {
+
+                //update all games and send pheromons vector to all connected players
+
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+                for (game* game : s->getListofAvailaibleGames()) 
+                    game->decreasePheromons();
+                
+                }
             }
-        }
+        );
+        
 
         // -------------------------------------------------------------------------
 

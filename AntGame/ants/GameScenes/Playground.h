@@ -57,13 +57,13 @@ public:
 
 	Playground() 
 	{
-		/* WIP
+		 
 		if (!m_client) {
 			Server::startLocalServer();
-			Server::setClientConnexion(m_client);
-			m_client->join(1);
+			//Server::setClientConnexion(m_client);
+			//m_client->join(1);
 		}
-		*/
+		
 
 		constexpr unsigned int mazeSize = 20;
 		ParamMaze params{
