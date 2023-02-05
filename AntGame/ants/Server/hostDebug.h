@@ -8,39 +8,44 @@
 
 namespace Server {
 
-	static void startLocalServer() {
+    static boost::asio::io_context* context = new boost::asio::io_context();
+
+	static server* startLocalServer() {
 
 
         JSON::LoadOptionFile("../AntGame/ants/Server/options.json");
-
-        boost::asio::io_context* context = new boost::asio::io_context();
 
         server* s = new server( *context, (unsigned short)88000 );
 
         // -------------------------------------------------------------------------
         
-        auto t1 = std::thread([=]
+        std::thread([=]
             {
                 context->run();
-            });
+            }).detach();
         
         // -------------------------------------------------------------------------
 
         
         std::thread([=] {
 
+
+                std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+
             while (true) {
 
                 //update all games and send pheromons vector to all connected players
-
+                std::cout << "server sent infos" << std::endl;
                 std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                 for (game* game : s->getListofAvailaibleGames()) 
                     game->decreasePheromons();
+                   
                 
                 }
             }
-        );
+        ).detach();
         
+        return s;
 
         // -------------------------------------------------------------------------
 
@@ -49,14 +54,14 @@ namespace Server {
     /**
     * Allocates new memory, dont forget to delete client
     */
-    static void setClientConnexion(Client* client) {
+    static Client* setClientConnexion() {
 
-        std::string adress = "192.168.1.23";
+        std::string adress = "127.0.0.1";
         unsigned short port = 88000;
-        boost::asio::io_context io_context1;
+        static boost::asio::io_context io_context1;
 
        // Client client1{ io_context1, adress, port };
-        client = new Client(io_context1, adress, port);
+        return new Client(io_context1, adress, port);
 
     }
 

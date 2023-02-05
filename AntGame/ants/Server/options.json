@@ -2,21 +2,21 @@
   "difficulty": {
     "1": {
       "MaxPlayers": 10,
-      "SizeOfSideMaze": 20,
+      "SizeOfSideMaze": 5,
       "NbFoodSources": 2,
-      "NestLine": 19,
-      "NestColumn": 19
+      "NestLine": 2,
+      "NestColumn": 2
     },
     "2": {
       "MaxPlayers": 10,
-      "SizeOfSideMaze": 20,
+      "SizeOfSideMaze": 30,
       "NbFoodSources": 2,
       "NestLine": 19,
       "NestColumn": 19
     },
     "3": {
       "MaxPlayers": 10,
-      "SizeOfSideMaze": 20,
+      "SizeOfSideMaze": 0,
       "NbFoodSources": 2,
       "NestLine": 19,
       "NestColumn": 19

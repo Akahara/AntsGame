@@ -9,12 +9,14 @@
 #define InvalidPosition 3
 #define TooMuchFood 4
 
+
 typedef struct Maze {
 	uint32_t nbColumn;
 	uint32_t nbLine;
 	uint32_t nestColumn;
 	uint32_t nestLine;
 	uint8_t* tiles; // c + l * nbColumn
+
 } Maze;
 
 typedef struct ParamMaze {

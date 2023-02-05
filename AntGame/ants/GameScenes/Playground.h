@@ -22,7 +22,7 @@
 
 class Playground : public Scene {
 private:
-	World::Sky m_sky{World::Sky::SkyboxesType::SAND};
+	World::Sky m_sky{ World::Sky::SkyboxesType::SAND };
 
 	float m_realTime = 0;
 
@@ -38,37 +38,34 @@ private:
 
 	visualEffects::VFXPipeline m_pipeline;
 
-	PheremonesManager m_pManager{ 
-		PheremonesManager::MazeProperties{
-		glm::uvec2(20,20),
-		glm::vec3(0,0,0),
-		5.f,20.f
-		} 
-	};
+	PheremonesManager* m_pManager;
 
 
-	
+
 	Server::Client* m_client = nullptr; // light change if global state idk
+	server* m_server = nullptr; // light change if global state idk
 
 
 
 
 public:
 
-	Playground() 
+	Playground()
 	{
-		 
-		if (!m_client) {
-			Server::startLocalServer();
-			//Server::setClientConnexion(m_client);
-			//m_client->join(1);
-		}
-		
 
-		constexpr unsigned int mazeSize = 20;
+		if (!m_client) {
+			m_server = Server::startLocalServer();
+			m_client = Server::setClientConnexion();
+			m_client->join(1);
+			std::this_thread::sleep_for(std::chrono::seconds(1));
+
+			std::cout << "temp" << std::endl;
+		}
+
+		/*
 		ParamMaze params{
-			mazeSize,
-			mazeSize,
+			m_client->getMaze()->nbColumn,
+			m_client->getMaze()->nbLine,
 			0,
 			0,
 			1,
@@ -76,10 +73,53 @@ public:
 		};
 
 		m_maze = *generateMazeCPP(&params); // this interface is... bad to say the least, if you go to the body of generateMazeCPP you will find
-											// an O(n) memory leak, what a performance!
+		// an O(n) memory leak, what a performance!
 		m_maze.tiles[1] |= MazeMeshGenerator::HAS_FOOD;
-		m_mazeMesh = MazeMeshGenerator::generateMazeMesh(m_maze);
+		*/
+
+
+		/*
+		
+		typedef struct ParamMaze {
+			uint32_t nbColumn;
+			uint32_t nbLine;
+			uint32_t nestColumn;
+			uint32_t nestLine;
+			uint32_t nbFood;
+			uint32_t difficulty;
+		} ParamMaze;
+
+		typedef struct Maze {
+			uint32_t nbColumn;
+			uint32_t nbLine;
+			uint32_t nestColumn;
+			uint32_t nestLine;
+			uint8_t* tiles; // c + l * nbColumn
+
+		} Maze;
+
+		*/
+
+		m_maze = Maze{
+			m_client->getMaze()->nbColumn,
+			m_client->getMaze()->nbLine,
+			m_client->getMaze()->nestColumn,
+			m_client->getMaze()->nestLine,
+			m_client->getMaze()->tiles
+		};
+
 		m_player.setMaze(m_maze);
+
+		m_pManager = new PheremonesManager(
+			PheremonesManager::MazeProperties{
+			glm::uvec2(m_client->getMaze()->nbColumn,m_client->getMaze()->nbLine),
+			glm::vec3(0,0,0),
+			5.f,20.f
+			}
+		);
+
+
+		m_mazeMesh = MazeMeshGenerator::generateMazeMesh(m_maze);
 		m_score.setMaze(m_maze);
 
 		int samplers[8] = { 0,1,2,3,4,5,6,7 };
@@ -101,10 +141,10 @@ public:
 		meshShader.setUniform3f("u_SunPos", 1000, 1000, 1000);
 		Renderer::Shader::unbind();
 
-		generateTerrain();		
+		generateTerrain();
 
 		m_pipeline.registerEffect<visualEffects::Bloom>();
-		m_pManager.scoreSystem = &m_score;
+		m_pManager->scoreSystem = &m_score;
 	}
 
 	void generateTerrain()
@@ -138,30 +178,34 @@ public:
 		m_realTime += delta;
 
 		glm::vec3 playerPos = m_player.getPosition();
-		glm::uvec2 pos = MazeTileSystem::getTileCoordinates(playerPos, { 20,20 }, { 0,0,0 }, 25.f /* CORRIDOR+WALSIZE */ );
-		
+		glm::uvec2 pos = MazeTileSystem::getTileCoordinates(playerPos, { 20,20 }, { 0,0,0 }, 25.f /* CORRIDOR+WALSIZE */); // make sure this is ok ?
+
 		if (pos != m_player.getTile()) {
 
 			Server::Client::MOVE_LIST direction = Server::computeMoveDirection(m_player.getTile(), pos);
+			m_client->move(direction);
 			m_player.setTile(pos);
 			Server::sendInfos(pos); // mock
-			auto infos = Server::pullServerInfos();
-			//m_pManager.setPheromones(infos.pheromonesValues);
+
+			std::vector<float> p = m_client->getPheromones();
+			std::for_each(p.begin(), p.end(), [](const float& f) {std::cout << "," << f; });
+			std::cout << std::endl;
+			m_pManager->setPheromones(m_client->getPheromones());
 		}
 
 		if (m_terrain.isInSamplableRegion(playerPos.x, playerPos.z) && !m_useDbgPlayer)
 			playerPos.y = m_terrain.getHeight(playerPos.x, playerPos.z) + 1.5f;
-		
+
 		m_player.setPosition(playerPos);
 		m_player.updateCamera();
 
 		if (m_useDbgPlayer) {
 			m_debugPlayer.step(delta);
-			m_pManager.step(delta, m_debugPlayer.getCamera().getPosition());
-		} 
+			m_pManager->step(delta, m_debugPlayer.getCamera().getPosition());
+		}
 		else {
 			m_player.step(delta);
-			m_pManager.step(delta, m_player.getCamera().getPosition());
+			m_pManager->step(delta, m_player.getCamera().getPosition());
 		}
 
 		m_score.step(m_player.getPosition());
@@ -175,7 +219,7 @@ public:
 
 		m_pipeline.bind();
 		Renderer::clear();
-		
+
 		m_sandTexture.bind(0);
 		for (const auto& [position, chunk] : m_terrain.getChunks()) {
 			const AABB& chunkAABB = chunk.getMesh().getBoundingBox();
@@ -185,11 +229,11 @@ public:
 
 			Renderer::renderMesh(camera, glm::vec3{ 0, 0, 0 }, glm::vec3{ 1, 1, 1 }, chunk.getMesh());
 		}
-		
+
 		Renderer::renderMesh(camera, { 0,0,0 }, { 1,1,1 }, m_mazeMesh);
-		
+
 		m_player.render(camera);
-		m_pManager.render(camera); // TODO animate collected pheromones
+		m_pManager->render(camera); // TODO animate collected pheromones
 		m_sky.render(camera);
 
 		m_pipeline.unbind();
@@ -201,15 +245,15 @@ public:
 		ImGui::Text("This is the playground for tests ! ");
 
 		ImGui::Checkbox("Use debug player", &m_useDbgPlayer);
-	
+
 		m_pipeline.onImGuiRender();
 
 		ImGui::SetNextWindowPos({ 0, 0 });
 		ImGui::SetNextWindowSize({ 600, 200 });
 		if (ImGui::Begin("Score!", nullptr, ImGuiWindowFlags_NoBackground | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_NoDecoration)) {
-		  ImGui::SetWindowFontScale(4);
-		  //ImGui::PushFont(nullptr); // TODO set the score's font
-		  ImGui::Text("SCORE: %u", m_score.getScore());
+			ImGui::SetWindowFontScale(4);
+			//ImGui::PushFont(nullptr); // TODO set the score's font
+			ImGui::Text("SCORE: %u", m_score.getScore());
 		}
 		ImGui::End();
 	}

@@ -90,7 +90,7 @@ void Client::move(std::string _move)
     boost::asio::write(p_socket_client, boost::asio::buffer(message_move), error);
 
     if (!error) {
-        std::cout << "MOVE SENT" << "\n";
+        std::cout << "MOVE SENT : " + _move << "\n";
     }
 
     else {

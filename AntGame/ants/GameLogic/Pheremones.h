@@ -270,10 +270,9 @@ private:
 
 
 				bool active = (scoreSystem) ? scoreSystem->isPickupActive({ x, y }) : false;
-				glm::vec3 color = (active) ? glm::lerp({ 2,0,1.2 }, glm::vec3{ 0,0,0 }, value) : glm::vec3{0,0,0};
-				
-				//glm::vec3 color = glm::lerp({ 1,0,0.6 }, glm::vec3{ 0,0,0 }, value);
-				drawPheromone(position, color, glm::lerp({ 4,4,4 }, glm::vec3{1,1,1}, value), playerPosition);
+				glm::vec3 color = (active) ? glm::lerp(glm::vec3{ 0,0,0 },{ 2,0,1.2 }, value) : glm::vec3{0,0,0};
+			
+				drawPheromone(position, color, glm::lerp(glm::vec3{1,1,1}, { 4,4,4 },value), playerPosition);
 
 			}
 		}

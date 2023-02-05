@@ -82,6 +82,7 @@ namespace Server {
         void setMaze(Maze* _maze) { p_maze = _maze; }
     
         Maze* getMaze() { return p_maze; }
+        std::vector<float> getPheromones() const { return p_pheromons; }
 
 private:
         /**
