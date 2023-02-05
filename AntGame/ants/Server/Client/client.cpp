@@ -20,7 +20,7 @@ using boost::system::system_error;
 using std::placeholders::_1;
 using std::placeholders::_2;
 
-bool VERBOSE = true;
+bool VERBOSE = false;
 
 using namespace Server; 
 

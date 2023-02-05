@@ -8,6 +8,7 @@
 #include "marble/world/Sky.h"
 
 #include "../Maze/MazeMeshGenerator.h"
+#include "../Maze/FoodMeshGenerator.h"
 #include "../Maze/MazeGeneration_proj/libAntMaze.h"
 #include "../Maze/MazeTileSystem.h"
 #include "../GameLogic/AntsPlayer.h"
@@ -19,6 +20,7 @@
 #include "../Server/Server/server.h"
 
 #include "marble/abstraction/pipeline/VFXPipeline.h"
+#include "marble/World/Props/PropsManager.h"
 
 class Playground : public Scene {
 private:
@@ -39,14 +41,10 @@ private:
 	visualEffects::VFXPipeline m_pipeline;
 
 	PheremonesManager* m_pManager;
+	World::PropsManager m_props;
 
-
-
-	Server::Client* m_client = nullptr; // light change if global state idk
-	server* m_server = nullptr; // light change if global state idk
-
-
-
+	Server::Client* m_client = nullptr; // might change if global state idk
+	server* m_server = nullptr; // might change if global state idk
 
 public:
 
@@ -75,10 +73,10 @@ public:
 		m_maze = *generateMazeCPP(&params); // this interface is... bad to say the least, if you go to the body of generateMazeCPP you will find
 		// an O(n) memory leak, what a performance!
 		m_maze.tiles[1] |= MazeMeshGenerator::HAS_FOOD;
-		*/
+		
 
 
-		/*
+		
 		
 		typedef struct ParamMaze {
 			uint32_t nbColumn;
@@ -120,6 +118,10 @@ public:
 
 
 		m_mazeMesh = MazeMeshGenerator::generateMazeMesh(m_maze);
+		std::vector<World::Prop> m_fsources = MazeMeshGenerator::generateFoodSources(m_maze);
+		std::for_each(m_fsources.begin(), m_fsources.end(), [&](const World::Prop& source) {m_props.feed(source); });
+
+
 		m_score.setMaze(m_maze);
 
 		int samplers[8] = { 0,1,2,3,4,5,6,7 };
@@ -150,8 +152,8 @@ public:
 	void generateTerrain()
 	{
 		// 20x20 * 20x20 ~= 512x512 which is a good size of the erosion algorithm
-		constexpr unsigned int chunkSize = 20;
-		constexpr unsigned int chunkCount = 20;
+		constexpr unsigned int chunkSize = 5;
+		constexpr unsigned int chunkCount = 5;
 
 		{ // simple terrain + erosion
 			unsigned int noiseMapSize = 3 + chunkSize * chunkCount;
@@ -233,8 +235,9 @@ public:
 		Renderer::renderMesh(camera, { 0,0,0 }, { 1,1,1 }, m_mazeMesh);
 
 		m_player.render(camera);
-		m_pManager->render(camera); // TODO animate collected pheromones
+		m_props.render(camera);
 		m_sky.render(camera);
+		m_pManager->render(camera); // TODO animate collected pheromones
 
 		m_pipeline.unbind();
 		m_pipeline.renderPipeline();

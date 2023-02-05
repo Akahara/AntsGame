@@ -173,6 +173,7 @@
     <ClInclude Include="ants\GameScenes\InGame.h" />
     <ClInclude Include="ants\GameScenes\Menu.h" />
     <ClInclude Include="ants\GameScenes\Playground.h" />
+    <ClInclude Include="ants\Maze\FoodMeshGenerator.h" />
     <ClInclude Include="ants\Maze\MazeGeneration_proj\CException.h" />
     <ClInclude Include="ants\Maze\MazeGeneration_proj\CMaze.h" />
     <ClInclude Include="ants\Maze\MazeGeneration_proj\CMazeGenerator.h" />

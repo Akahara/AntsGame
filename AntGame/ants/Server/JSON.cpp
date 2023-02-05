@@ -85,7 +85,7 @@ void JSON::LoadOptionFile(std::string _path)
 
 	Constants::DIFFICULTY1_MAX_PLAYERS = root.get("difficulty.1.MaxPlayers", 6);
 	Constants::DIFFICULTY1_SIDE_SIZE = root.get("difficulty.1.SideOfSideMaze", 5);
-	Constants::DIFFICULTY1_NBFOOD = root.get("difficulty.1.NbFoodSources", 20);
+	Constants::DIFFICULTY1_NBFOOD = root.get("difficulty.1.NbFoodSources", 2);
 	Constants::DIFFICULTY1_NESTLINE = root.get("difficulty.1.NestLine", 1);
 	Constants::DIFFICULTY1_NESTCOLUMN = root.get("difficulty.1.NestColumn", 1);
 

@@ -140,5 +140,8 @@
     <ClInclude Include="ants\Server\Server\session.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="ants\Maze\FoodMeshGenerator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
