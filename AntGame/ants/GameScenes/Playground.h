@@ -9,6 +9,7 @@
 #include "marble/world/Sky.h"
 #include "marble/World/TerrainGeneration/Terrain.h"
 #include "marble/World/TerrainGeneration/Noise.h"
+#include "marble/Utils/Debug.h"
 
 #include "../Maze/MazeMeshGenerator.h"
 #include "../Maze/FoodMeshGenerator.h"
@@ -62,7 +63,6 @@ public:
 	{
 		// Local server creation
 		{
-
 		if (!m_client) {
 			/* TODO : fix the crash when quitting the application */
 			m_server = Server::startLocalServer();
@@ -74,65 +74,60 @@ public:
 
 		// Game Logic setup (maze, food, score, pheromones)
 		{
+			m_maze = Maze{
+				m_client->getMaze()->nbColumn,
+				m_client->getMaze()->nbLine,
+				m_client->getMaze()->nestColumn,
+				m_client->getMaze()->nestLine,
+				m_client->getMaze()->tiles
+			};
 
-		m_maze = Maze{
-			m_client->getMaze()->nbColumn,
-			m_client->getMaze()->nbLine,
-			m_client->getMaze()->nestColumn,
-			m_client->getMaze()->nestLine,
-			m_client->getMaze()->tiles
-		};
+			m_player.setMaze(m_maze);
+			//m_foodLogic = new FoodLogic(m_maze);
+			m_pManager = new PheremonesManager(
+				PheremonesManager::MazeProperties{
+				glm::uvec2(m_client->getMaze()->nbColumn,m_client->getMaze()->nbLine),
+				glm::vec3(0,0,0),
+				5.f,20.f,
+				*m_client->getMaze()
+				}
+			);
 
-		m_player.setMaze(m_maze);
-		//m_foodLogic = new FoodLogic(m_maze);
-		m_pManager = new PheremonesManager(
-			PheremonesManager::MazeProperties{
-			glm::uvec2(m_client->getMaze()->nbColumn,m_client->getMaze()->nbLine),
-			glm::vec3(0,0,0),
-			5.f,20.f,
-			*m_client->getMaze()
-			}
-		);
+			m_score.setMaze(m_maze);
+			m_pManager->scoreSystem = &m_score;
+		}
 
-		m_score.setMaze(m_maze);
-		m_pManager->scoreSystem = &m_score;
 		// Mesh and terration generation
 		{
-		m_mazeMesh = MazeMeshGenerator::generateMazeMesh(m_maze);
-		std::vector<World::Prop> m_fsources = MazeMeshGenerator::generateFoodSources(m_maze);
-		std::for_each(m_fsources.begin(), m_fsources.end(), [&](const World::Prop& source) {m_props.feed(source); });
-		generateTerrain();
-		m_pipeline.registerEffect<visualEffects::Bloom>();
-		m_wallMesh = Renderer::loadMeshFromFile("res/meshes/wall.obj");
+			m_mazeMesh = MazeMeshGenerator::generateMazeMesh(m_maze);
+			std::vector<World::Prop> m_fsources = MazeMeshGenerator::generateFoodSources(m_maze);
+			std::for_each(m_fsources.begin(), m_fsources.end(), [&](const World::Prop& source) {m_props.feed(source); });
+			generateTerrain();
+			m_pipeline.registerEffect<visualEffects::Bloom>();
+			m_wallMesh = Renderer::loadMeshFromFile("res/meshes/wall.obj");
 		}
 
 		// Shader Factory
 		{
-
-
-		
-
-		int samplers[8] = { 0,1,2,3,4,5,6,7 };
-		Renderer::Shader& meshShader = Renderer::rebuildStandardMeshShader(Renderer::ShaderFactory()
-			.prefix("res/shaders/")
-			.addFileVertex("standard.vs")
-			.prefix("mesh_parts/")
-			.addFileFragment("base.fs")
-			.addFileFragment("color_singletexture.fs")
-			.addFileFragment("lights_pointlights.fs")
-			.addFileFragment("final_fog.fs")
-			.addFileFragment("shadows_normal.fs")
-			.addFileFragment("normal_normalmap.fs"));
-		meshShader.bind();
-		meshShader.setUniform1f("u_Strength", 1.25f);
-		meshShader.setUniform1iv("u_Textures2D", 8, samplers);
-		meshShader.setUniform3f("u_fogDamping", .002f, .002f, .004f);
-		meshShader.setUniform3f("u_fogColor", 1.000f, 0.944f, 0.102f);
-		meshShader.setUniform3f("u_SunPos", 1000, 1000, 1000);
-		Renderer::Shader::unbind();
+			int samplers[8] = { 0,1,2,3,4,5,6,7 };
+			Renderer::Shader& meshShader = Renderer::rebuildStandardMeshShader(Renderer::ShaderFactory()
+				.prefix("res/shaders/")
+				.addFileVertex("standard.vs")
+				.prefix("mesh_parts/")
+				.addFileFragment("base.fs")
+				.addFileFragment("color_singletexture.fs")
+				.addFileFragment("lights_pointlights.fs")
+				.addFileFragment("final_fog.fs")
+				.addFileFragment("shadows_normal.fs")
+				.addFileFragment("normal_normalmap.fs"));
+			meshShader.bind();
+			meshShader.setUniform1f("u_Strength", 1.25f);
+			meshShader.setUniform1iv("u_Textures2D", 8, samplers);
+			meshShader.setUniform3f("u_fogDamping", .002f, .002f, .004f);
+			meshShader.setUniform3f("u_fogColor", 1.000f, 0.944f, 0.102f);
+			meshShader.setUniform3f("u_SunPos", 1000, 1000, 1000);
+			Renderer::Shader::unbind();
 		}
-
-
 	}
 
 	~Playground() {
@@ -200,8 +195,7 @@ public:
 		if (m_useDbgPlayer) {
 			m_debugPlayer.step(delta);
 			m_pManager->step(delta, m_debugPlayer.getCamera().getPosition());
-		}
-		else {
+		} else {
 			m_player.step(delta);
 			m_pManager->step(delta, m_player.getCamera().getPosition());
 		}
@@ -214,8 +208,6 @@ public:
 		const Renderer::Camera& camera = m_useDbgPlayer ? m_debugPlayer.getCamera() : m_player.getCamera();
 
 		Renderer::Frustum cameraFrustum = Renderer::Frustum::createFrustumFromPerspectiveCamera(camera);
-
-
 
 		m_pipeline.bind();
 		Renderer::clear();
@@ -231,17 +223,30 @@ public:
 		}
 
 		Renderer::renderMesh(camera, { 0,0,0 }, { 1,1,1 }, m_mazeMesh);
+
+		// TODO replace the maze mesh by actual walls and pillars meshes
+		// DOTOO do instanced rendering on walls and pillars
+		//for (unsigned int x = 0; x < m_maze.nbLine; x++) {
+		//	for (unsigned int y = 0; y < m_maze.nbColumn; y++) {
+		//		constexpr float W = MazeMeshGenerator::WALL_SIZE;
+		//		constexpr float C = MazeMeshGenerator::CORRIDOR_SPACE;
+		//		constexpr float H = MazeMeshGenerator::WALL_HEIGHT;
+		//		Renderer::renderMesh(camera, { C,0,C/2.f }, { W,H,(C-W)/2 }, m_wallMesh);
+		//	}
+		//}
+
 		m_props.render(camera);
 		m_player.render(camera);
 		m_props.render(camera);
 		m_sky.render(camera);
 		m_pManager->render(camera); 
 
-		for (unsigned int y = 0; y < 5; y++) {
-			for (unsigned int x = 0; x < 5; x++) {
-
-				AABB aabb = AABB::make_aabb(glm::vec3(x * 20, 0, y * 20), glm::vec3((x + 1) * 20, 5.f, (y + 1) * 20));
-				Renderer::renderAABBDebugOutline(camera, aabb);
+		if (DebugWindow::renderAABB()) {
+			for (unsigned int y = 0; y < 5; y++) {
+				for (unsigned int x = 0; x < 5; x++) {
+					AABB aabb = AABB::make_aabb(glm::vec3(x * 20, 0, y * 20), glm::vec3((x + 1) * 20, 5.f, (y + 1) * 20));
+					Renderer::renderAABBDebugOutline(camera, aabb);
+				}
 			}
 		}
 
