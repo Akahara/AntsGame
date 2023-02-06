@@ -3,6 +3,8 @@
 #include <glm/glm.hpp>
 
 #include "marble/Utils/Mathf.h"
+#include "MazeGeneration_proj/libAntMaze.h"
+
 
 class MazeTileSystem
 {
@@ -22,10 +24,17 @@ public:
 
 		float y = float(position.z - startOfMaze.z) / mazeWidth;
 
-		
+
 		unsigned int y_tile = (unsigned int)(y * (mazeDimensions.y - 1));
 
 		return { x_tile, y_tile };
+
+	}
+
+
+	static bool hasFoodOnTile(const Maze& maze, const glm::uvec2& tile) {
+
+		return ((maze.tiles[tile.y * maze.nbColumn + tile.x] & 16) == 16);
 
 	}
 

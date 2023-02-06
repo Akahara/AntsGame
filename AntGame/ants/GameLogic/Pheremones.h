@@ -9,6 +9,8 @@
 #include "Score.h"
 
 
+#include "../Maze/MazeTileSystem.h"
+
 
 static std::string vs = R"glsl(
 			#version 330 core
@@ -130,6 +132,7 @@ public:
 		glm::vec3 startingPoint;
 		float wallSize;
 		float corridorSpace;
+		Maze maze; /*To know nest and food locations*/
 
 	} m_mazeProps;
 
@@ -264,6 +267,7 @@ private:
 
 			for (unsigned int x = 0; x < m_mazeProps.mazeDimensions.x; x++) {
 
+				if (MazeTileSystem::hasFoodOnTile(m_mazeProps.maze, { x,y })) continue;
 				int index = y * m_mazeProps.mazeDimensions.x + x;
 				float value = m_pheromones[index];
 				glm::vec3 position = computePheromonePosition({ x,y });

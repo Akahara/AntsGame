@@ -59,7 +59,7 @@ namespace MazeMeshGenerator
 		auto computeFoodPosition = [&](const glm::uvec2 tile) {
 
 			float x = (0.5f + tile.x) * (CORRIDOR_SPACE);
-			float y = 3; // TODO
+			float y = 3; // TODO find the correct height
 			float z = (0.5f + tile.y) * (CORRIDOR_SPACE);
 
 			glm::vec3 res = mazeStartingPoint + glm::vec3{ x, y, z };
@@ -68,9 +68,9 @@ namespace MazeMeshGenerator
 		};
 
 
-		for (unsigned int y = 0; y < maze.nbLine +1; y++) {
+		for (unsigned int y = 0; y < maze.nbLine; y++) {
 
-			for (unsigned int x = 0; x < maze.nbColumn + 1; x++) {
+			for (unsigned int x = 0; x < maze.nbColumn; x++) {
 
 
 				int i = y * maze.nbColumn + x;

@@ -33,11 +33,12 @@ static ServerInfos pullServerInfos()
 	return res;
 }
 
-static void sendInfos(const glm::uvec2& pos) 
+static void increaseTilePheromone(const glm::uvec2& pos, const server& server)  
 {
-	std::cout << "Position sent : " << pos <<std::endl;
-
+	// somehow send a request to update a certain tile quantity
 }
+
+
 
 static Server::Client::MOVE_LIST computeMoveDirection(const glm::uvec2& old_tile, const glm::uvec2& new_tile) {
 

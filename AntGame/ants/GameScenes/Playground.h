@@ -22,6 +22,8 @@
 #include "marble/abstraction/pipeline/VFXPipeline.h"
 #include "marble/World/Props/PropsManager.h"
 
+#include "../GameLogic/Food.h";
+
 class Playground : public Scene {
 private:
 	World::Sky m_sky{ World::Sky::SkyboxesType::SAND };
@@ -43,60 +45,29 @@ private:
 	PheremonesManager* m_pManager;
 	World::PropsManager m_props;
 
+	FoodLogic* m_foodLogic;
+
 	Server::Client* m_client = nullptr; // might change if global state idk
 	server* m_server = nullptr; // might change if global state idk
 
 public:
 
-	Playground()
+	Playground() 
 	{
+		// Local server creation
+		{
 
 		if (!m_client) {
+			/* TODO : fix the crash when quitting the application */
 			m_server = Server::startLocalServer();
 			m_client = Server::setClientConnexion();
 			m_client->join(1);
-			std::this_thread::sleep_for(std::chrono::seconds(1));
-
-			std::cout << "temp" << std::endl;
+			std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		}
 		}
 
-		/*
-		ParamMaze params{
-			m_client->getMaze()->nbColumn,
-			m_client->getMaze()->nbLine,
-			0,
-			0,
-			1,
-			2
-		};
-
-		m_maze = *generateMazeCPP(&params); // this interface is... bad to say the least, if you go to the body of generateMazeCPP you will find
-		// an O(n) memory leak, what a performance!
-		m_maze.tiles[1] |= MazeMeshGenerator::HAS_FOOD;
-		
-
-
-		
-		
-		typedef struct ParamMaze {
-			uint32_t nbColumn;
-			uint32_t nbLine;
-			uint32_t nestColumn;
-			uint32_t nestLine;
-			uint32_t nbFood;
-			uint32_t difficulty;
-		} ParamMaze;
-
-		typedef struct Maze {
-			uint32_t nbColumn;
-			uint32_t nbLine;
-			uint32_t nestColumn;
-			uint32_t nestLine;
-			uint8_t* tiles; // c + l * nbColumn
-
-		} Maze;
-
-		*/
+		// Game Logic setup (maze, food, score, pheromones)
+		{
 
 		m_maze = Maze{
 			m_client->getMaze()->nbColumn,
@@ -107,22 +78,31 @@ public:
 		};
 
 		m_player.setMaze(m_maze);
-
+		m_foodLogic = &(FoodLogic(m_maze));
 		m_pManager = new PheremonesManager(
 			PheremonesManager::MazeProperties{
 			glm::uvec2(m_client->getMaze()->nbColumn,m_client->getMaze()->nbLine),
 			glm::vec3(0,0,0),
-			5.f,20.f
+			5.f,20.f,
+			*m_client->getMaze()
 			}
 		);
 
+		m_score.setMaze(m_maze);
+		m_pManager->scoreSystem = &m_score;
+		}
 
+		// Mesh and terration generation
+		{
 		m_mazeMesh = MazeMeshGenerator::generateMazeMesh(m_maze);
 		std::vector<World::Prop> m_fsources = MazeMeshGenerator::generateFoodSources(m_maze);
 		std::for_each(m_fsources.begin(), m_fsources.end(), [&](const World::Prop& source) {m_props.feed(source); });
+		generateTerrain();
+		m_pipeline.registerEffect<visualEffects::Bloom>();
+		}
 
-
-		m_score.setMaze(m_maze);
+		// Shader Factory
+		{
 
 		int samplers[8] = { 0,1,2,3,4,5,6,7 };
 		Renderer::Shader& meshShader = Renderer::rebuildStandardMeshShader(Renderer::ShaderFactory()
@@ -142,18 +122,20 @@ public:
 		meshShader.setUniform3f("u_fogColor", 1.000f, 0.944f, 0.102f);
 		meshShader.setUniform3f("u_SunPos", 1000, 1000, 1000);
 		Renderer::Shader::unbind();
+		}
 
-		generateTerrain();
 
-		m_pipeline.registerEffect<visualEffects::Bloom>();
-		m_pManager->scoreSystem = &m_score;
+	}
+
+	~Playground() {
+		delete m_pManager;
 	}
 
 	void generateTerrain()
 	{
 		// 20x20 * 20x20 ~= 512x512 which is a good size of the erosion algorithm
-		constexpr unsigned int chunkSize = 5;
-		constexpr unsigned int chunkCount = 5;
+		constexpr unsigned int chunkSize = 10;
+		constexpr unsigned int chunkCount = 10;
 
 		{ // simple terrain + erosion
 			unsigned int noiseMapSize = 3 + chunkSize * chunkCount;
@@ -165,41 +147,48 @@ public:
 				/*frequency*/1.f,
 				/*lacunarity*/2.1f,
 				/*seed*/0);
-			//Noise::ErosionSettings erosionSettings{};
-			//Noise::erode(noiseMap, noiseMapSize, erosionSettings);
 			Noise::rescaleNoiseMap(noiseMap, noiseMapSize, noiseMapSize, 0, 1, 0, /*terrain height*/2.f);
-			Noise::outlineNoiseMap(noiseMap, noiseMapSize, noiseMapSize, -5, 2);
 			Terrain::HeightMap* heightMap = new Terrain::ConcreteHeightMap(noiseMapSize, noiseMapSize, noiseMap);
 			m_terrain = Terrain::generateTerrain(heightMap, chunkCount, chunkCount, chunkSize);
 		}
 	}
 
-
 	void step(float delta) override
 	{
 		m_realTime += delta;
 
+		
+		// Tile checks
 		glm::vec3 playerPos = m_player.getPosition();
-		glm::uvec2 pos = MazeTileSystem::getTileCoordinates(playerPos, { 20,20 }, { 0,0,0 }, 25.f /* CORRIDOR+WALSIZE */); // make sure this is ok ?
+		glm::uvec2 pos = MazeTileSystem::getTileCoordinates(playerPos, { 20,20 }, { 0,0,0 }, 25.f /* CORRIDOR+WALSIZE */); // TODO make sure this is ok ?
 
 		if (pos != m_player.getTile()) {
 
+			/* Compute the move and update the player's tile */
 			Server::Client::MOVE_LIST direction = Server::computeMoveDirection(m_player.getTile(), pos);
 			m_client->move(direction);
 			m_player.setTile(pos);
-			Server::sendInfos(pos); // mock
+			
+			/* Update the tile if the player holds food */
+			bool playerHoldsFood = m_foodLogic->doesPlayerCurrentlyHoldFood();
+			if (playerHoldsFood) {
+				Server::increaseTilePheromone(pos, *m_server); // TODO
+			}
 
+			/* Get all tiles pheromone value */
 			std::vector<float> p = m_client->getPheromones();
 			std::for_each(p.begin(), p.end(), [](const float& f) {std::cout << "," << f; });
 			std::cout << std::endl;
 			m_pManager->setPheromones(m_client->getPheromones());
 		}
 
+		// Fake gravity stuff
 		if (m_terrain.isInSamplableRegion(playerPos.x, playerPos.z) && !m_useDbgPlayer)
 			playerPos.y = m_terrain.getHeight(playerPos.x, playerPos.z) + 1.5f;
 
 		m_player.setPosition(playerPos);
 		m_player.updateCamera();
+
 
 		if (m_useDbgPlayer) {
 			m_debugPlayer.step(delta);
@@ -237,7 +226,7 @@ public:
 		m_player.render(camera);
 		m_props.render(camera);
 		m_sky.render(camera);
-		m_pManager->render(camera); // TODO animate collected pheromones
+		m_pManager->render(camera); 
 
 		m_pipeline.unbind();
 		m_pipeline.renderPipeline();

@@ -13,7 +13,7 @@ namespace Server {
 	static server* startLocalServer() {
 
 
-        JSON::LoadOptionFile("../AntGame/ants/Server/options.json");
+        JSON::LoadOptionFile("../AntGame/ants/Server/options.json"); // todo maybe this isnt found
 
         server* s = new server( *context, (unsigned short)88000 );
 
@@ -30,12 +30,12 @@ namespace Server {
         std::thread([=] {
 
 
-                std::this_thread::sleep_for(std::chrono::milliseconds(3000));
+                std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 
             while (true) {
 
                 //update all games and send pheromons vector to all connected players
-                std::cout << "server sent infos" << std::endl;
+                //std::cout << "server sent infos" << std::endl;
                 std::this_thread::sleep_for(std::chrono::milliseconds(1000));
                 for (game* game : s->getListofAvailaibleGames()) 
                     game->decreasePheromons();
