@@ -2,6 +2,10 @@
 #include <iostream>
 #include <stdlib.h>
 
+
+#include <boost/uuid/uuid.hpp>
+#include <boost/uuid/uuid_io.hpp>
+
 game::game(const int& _difficulty, const int& _max_nb_players, int _size_side_maze) : difficulty{ _difficulty }, MAX_PLAYERS{ _max_nb_players }
 	{
 		// Create the parametersMaze struct
@@ -73,51 +77,73 @@ game::game(const int& _difficulty, const int& _max_nb_players, int _size_side_ma
 		_session->sendMaze(_player_uuid, p_Maze);
 	}
 
-	void game::move(const boost::uuids::uuid& _player, std::string _move)
+	void game::move(const boost::uuids::uuid& _player, const std::string& _move)
 	{
-		int i = 0;
-
+		Server::Player* player = nullptr;
+		
 		// Find the player with the given UUID	
-		while (p_players[i].p_uuid != _player) {
-			i++;
+		
+		for (auto& p : p_players) {
+			if (p.p_uuid == _player) {
+				player = &p;
+			}
 		}
+
+		if (!player) throw std::exception("Somehow, we didn't find the player that did the move...");
+
+		std::cout << "Player infos : " << std::endl;
+		std::cout << "----- Has food ? " << player->has_food << std::endl;
 
 		// Deals with the movement given
 		if (_move == "haut") {
-			(p_players[i].actual_line) -= 1;
+			(player->actual_line) -= 1;
 
 		}
 
 		if (_move == "bas") {
-			(p_players[i].actual_line) += 1;
+			(player->actual_line) += 1;
 		}
 
 		if (_move == "gauche") {
-			(p_players[i].actual_column) -= 1;
+			(player->actual_column) -= 1;
 		}
 
 		if (_move == "droite") {
-			(p_players[i].actual_column) += 1;
+			(player->actual_column) += 1;
 		}
-
 
 		/* If the value of hte tile where the player is is between 16 and 32, the player is actually on a food source
 			We change the value of hasFood to TRUE
 		*/
-		if (16 <= p_Maze->tiles[p_players[i].actual_line * p_Maze->nbColumn + p_players[i].actual_column] < 32 && p_players[i].has_food == false) {
-			p_players[i].has_food == true;
+		
+
+		auto hasFood = [&](const uint8_t tile) {return (tile & 16) == 16; };
+		auto isNest = [&](const uint8_t tile) {return (tile & 32); };
+		auto getPlayerTile = [&]() {
+
+			return  p_Maze->tiles[player->actual_line * p_Maze->nbColumn + player->actual_column];
+		};
+		auto getPlayerTileIndice = [&]() {
+			return player->actual_line * p_Maze->nbColumn + player->actual_column;
+		};
+		uint8_t actualPosition = getPlayerTile();
+		std::cout << "Server side position : " << player->actual_line << " :" << player->actual_column << std::endl;
+		if (hasFood(actualPosition) && player->has_food == false) {
+			player->has_food == true;
+			std::cout << "player : " << boost::uuids::to_string(player->p_uuid) << " has found food ! " << std::endl;
 		}
 
 		// If the player arrrive at Nest with food, he give it to the nest so doesn't has it anymore
 
-		if (p_players[i].actual_column == p_Maze->nestColumn && p_players[i].actual_line == p_Maze->nestLine && p_players[i].has_food == true) {
-			p_players[i].has_food == false;
+		if (isNest(actualPosition) && player->has_food == true) {
+			player->has_food == false;
 		}
 
 		/* If the player has food at this moment of code, this means he's on a normal tile, we just increase the pheromons value of this tile */
 
-		if (p_players[i].has_food == true) {
-			p_pheromons[p_players[i].actual_line * p_Maze->nbColumn + p_players[i].actual_column] += Constants::PHEROMON_DROP_AMOUNT;
+		if (player->has_food == true) {
+			p_pheromons[getPlayerTileIndice()] += Constants::PHEROMON_DROP_AMOUNT;
+			std::cout << "pheromones at tile : " << actualPosition << " : " << p_pheromons[actualPosition] << std::endl;
 		}
 
 

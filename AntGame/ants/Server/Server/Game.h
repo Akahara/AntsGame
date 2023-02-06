@@ -85,7 +85,7 @@ public:
      * @param _player The UUID of the player.
      * @param _move The move to make.
      */
-    void move(const boost::uuids::uuid& _player, std::string _move);
+    void move(const boost::uuids::uuid& _player, const std::string& _move);
 
     /**
      * @brief Remove a player from the game after he disconnects.

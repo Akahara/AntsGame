@@ -25,17 +25,17 @@ struct Player {
     /**
      * @brief The current column of the player.
      */
-    int actual_column;
+    int actual_column = 0;
 
     /**
      * @brief The current line of the player.
      */
-    int actual_line;
+    int actual_line = 0;
 
     /**
      * @brief A flag indicating if the player has food.
      */
-    bool has_food;
+    bool has_food = false;
 
     /**
      * @brief A shared pointer to the session of the player.

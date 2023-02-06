@@ -19,13 +19,13 @@ public:
 
 
 		float x = float(position.x - startOfMaze.x) / mazeLength;
-		unsigned int x_tile = (unsigned int)(x * (mazeDimensions.x - 1));
+		unsigned int x_tile = (unsigned int)(x * (mazeDimensions.x));
 
 
 		float y = float(position.z - startOfMaze.z) / mazeWidth;
 
 
-		unsigned int y_tile = (unsigned int)(y * (mazeDimensions.y - 1));
+		unsigned int y_tile = (unsigned int)(y * (mazeDimensions.y));
 
 		return { x_tile, y_tile };
 
@@ -34,7 +34,7 @@ public:
 
 	static bool hasFoodOnTile(const Maze& maze, const glm::uvec2& tile) {
 
-		return ((maze.tiles[tile.y * maze.nbColumn + tile.x] & 16) == 16);
+		return ((maze.tiles[tile.y * maze.nbColumn + tile.x] & 16));
 
 	}
 

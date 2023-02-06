@@ -45,7 +45,7 @@ private:
 	PheremonesManager* m_pManager;
 	World::PropsManager m_props;
 
-	FoodLogic* m_foodLogic;
+	//FoodLogic* m_foodLogic;
 
 	Server::Client* m_client = nullptr; // might change if global state idk
 	server* m_server = nullptr; // might change if global state idk
@@ -78,7 +78,7 @@ public:
 		};
 
 		m_player.setMaze(m_maze);
-		m_foodLogic = &(FoodLogic(m_maze));
+		//m_foodLogic = new FoodLogic(m_maze);
 		m_pManager = new PheremonesManager(
 			PheremonesManager::MazeProperties{
 			glm::uvec2(m_client->getMaze()->nbColumn,m_client->getMaze()->nbLine),
@@ -160,7 +160,12 @@ public:
 		
 		// Tile checks
 		glm::vec3 playerPos = m_player.getPosition();
-		glm::uvec2 pos = MazeTileSystem::getTileCoordinates(playerPos, { 20,20 }, { 0,0,0 }, 25.f /* CORRIDOR+WALSIZE */); // TODO make sure this is ok ?
+		glm::uvec2 pos = MazeTileSystem::getTileCoordinates(playerPos,
+			glm::uvec2(m_maze.nbColumn, m_maze.nbLine),
+			{ 0,0,0 },
+			20.F/* CORRIDOR */
+		); 
+
 
 		if (pos != m_player.getTile()) {
 
@@ -169,12 +174,6 @@ public:
 			m_client->move(direction);
 			m_player.setTile(pos);
 			
-			/* Update the tile if the player holds food */
-			bool playerHoldsFood = m_foodLogic->doesPlayerCurrentlyHoldFood();
-			if (playerHoldsFood) {
-				Server::increaseTilePheromone(pos, *m_server); // TODO
-			}
-
 			/* Get all tiles pheromone value */
 			std::vector<float> p = m_client->getPheromones();
 			std::for_each(p.begin(), p.end(), [](const float& f) {std::cout << "," << f; });
@@ -208,6 +207,8 @@ public:
 
 		Renderer::Frustum cameraFrustum = Renderer::Frustum::createFrustumFromPerspectiveCamera(camera);
 
+
+
 		m_pipeline.bind();
 		Renderer::clear();
 
@@ -227,6 +228,14 @@ public:
 		m_props.render(camera);
 		m_sky.render(camera);
 		m_pManager->render(camera); 
+
+		for (unsigned int y = 0; y < 5; y++) {
+			for (unsigned int x = 0; x < 5; x++) {
+
+				AABB aabb = AABB::make_aabb(glm::vec3(x * 20, 0, y * 20), glm::vec3((x + 1) * 20, 5.f, (y + 1) * 20));
+				Renderer::renderAABBDebugOutline(camera, aabb);
+			}
+		}
 
 		m_pipeline.unbind();
 		m_pipeline.renderPipeline();

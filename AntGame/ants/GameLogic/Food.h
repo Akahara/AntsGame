@@ -4,6 +4,9 @@
 #include <glm/vec2.hpp>
 #include "../Maze/MazeTileSystem.h"
 
+/***
+* DEPRECATED CLASS !!  
+*/
 constexpr float PICKUP_FOOD_RATE = 0.05f;
 
 class FoodLogic
