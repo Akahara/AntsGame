@@ -1,8 +1,13 @@
-CFLAGS := -std=c++2b \
-	-IMarbleEngine/Libraries/include \
-	-IMarbleEngine
+CC = clang
+CXX = clang++
 
-LDFLAGS := -O0 -g -lglfw
+CFLAGS := -O0 -g
+CXXFLAGS := $(CFLAGS) -std=c++2b
+
+LDFLAGS := -O0 -g
+
+FLAGS := -IMarbleEngine/Libraries/include -IMarbleEngine
+LIBS := -lglfw -lm
 
 MARBLE_ENGINE := MarbleEngine
 ANT_GAME := AntGame
@@ -44,11 +49,10 @@ SRC_MARBLE_ENGINE := $(MARBLE_ENGINE)/Libraries/include/glm/detail/glm.cpp \
 	$(MARBLE_ENGINE)/marble/World/Water/WaterRenderer.cpp \
 	$(MARBLE_ENGINE)/marble/World/Water/Water.cpp \
 	$(MARBLE_ENGINE)/marble/World/Water/WaterSource.cpp \
-
-SRCC_MARBLE_ENGINE :=	$(MARBLE_ENGINE)/marble/vendor/glad.c
+	$(MARBLE_ENGINE)/marble/vendor/glad.c
 
 OBJ_MARBLE_ENGINE := $(SRC_MARBLE_ENGINE:.cpp=.o)
-OBJC_MARBLE_ENGINE := $(SRCC_MARBLE_ENGINE:.c=.o)
+OBJ_MARBLE_ENGINE := $(OBJ_MARBLE_ENGINE:.c=.o)
 
 SRC_ANTGAME := $(ANT_GAME)/ants/GameLogic/Pheremones.cpp \
 	$(ANT_GAME)/ants/GameLogic/AntsPlayer.cpp \
@@ -71,14 +75,21 @@ SRC_ANTGAME := $(ANT_GAME)/ants/GameLogic/Pheremones.cpp \
 
 OBJ_ANTGAME := $(SRC_ANTGAME:.cpp=.o)
 
+all: game
+
+clean:
+	rm -f $(OBJ_MARBLE_ENGINE) libmarbleengine.a game
+
 %.o: %.cpp
-	$(CC) -c -o $@ $^ $(CFLAGS)
+	$(CXX) -c -o $@ $^ $(CXXFLAGS) $(FLAGS)
 
 %.o: %.c
-	$(CC) -c -o $@ $^ $(CFLAGS)
+	$(CC) -c -o $@ $^ $(CFLAGS) $(FLAGS)
 
-libmarbleengine.a: $(OBJ_MARBLE_ENGINE) $(OBJC_MARBLE_ENGINE)
+libmarbleengine.a: $(OBJ_MARBLE_ENGINE)
 	$(AR) rcu $@ $^
 
-antgame: libmarbleengine.a $(OBJ_ANTGAME)
-	$(CC) -o $@ $^ $(LDFLAGS) libmarbleengine.a 
+game: $(OBJ_ANTGAME) libmarbleengine.a
+	$(CXX) -o $@ $^ $(LDFLAGS) $(LIBS)
+
+.PHONY: all libmarbleengine.a game
