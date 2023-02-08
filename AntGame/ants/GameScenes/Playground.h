@@ -26,7 +26,6 @@
 #include "marble/abstraction/pipeline/VFXPipeline.h"
 #include "marble/World/Props/PropsManager.h"
 
-#include "../GameLogic/Food.h";
 
 class Playground : public Scene {
 private:
@@ -50,7 +49,6 @@ private:
 	PheremonesManager* m_pManager;
 	World::PropsManager m_props;
 
-	//FoodLogic* m_foodLogic;
 
 	Server::Client* m_client = nullptr; // might change if global state idk
 	server* m_server = nullptr; // might change if global state idk
@@ -128,6 +126,10 @@ public:
 			meshShader.setUniform3f("u_SunPos", 1000, 1000, 1000);
 			Renderer::Shader::unbind();
 		}
+
+
+		m_player.setPosition(glm::vec3{ 25 * 2, 0 , 25 * 2 });
+		m_player.setTile({ 2,2 });
 	}
 
 	~Playground() {

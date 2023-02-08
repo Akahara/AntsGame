@@ -72,17 +72,17 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>C:\programming\boost;$(SolutionDir)\MarbleEngine\Libraries\include;$(LibraryPath);$(IncludePath)</IncludePath>
-    <ExternalIncludePath>C:\Program Files\boost\boost_1_81_0;$(ExternalIncludePath)</ExternalIncludePath>
+    <ExternalIncludePath>C:\boost;C:\Program Files\boost\boost_1_81_0;$(ExternalIncludePath)</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(SolutionDir)\MarbleEngine\Libraries\include;$(LibraryPath);$(IncludePath)</IncludePath>
-    <ExternalIncludePath>C:\Program Files\boost\boost_1_81_0;$(ExternalIncludePath)</ExternalIncludePath>
+    <ExternalIncludePath>C:\boost;C:\Program Files\boost\boost_1_81_0;$(ExternalIncludePath)</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <ExternalIncludePath>C:\Program Files\boost\boost_1_81_0;$(ExternalIncludePath)</ExternalIncludePath>
+    <ExternalIncludePath>C:\boost;C:\Program Files\boost\boost_1_81_0;$(ExternalIncludePath)</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <ExternalIncludePath>C:\Program Files\boost\boost_1_81_0;$(ExternalIncludePath)</ExternalIncludePath>
+    <ExternalIncludePath>C:\boost;C:\Program Files\boost\boost_1_81_0;$(ExternalIncludePath)</ExternalIncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -176,9 +176,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ants\GameLogic\AntsPlayer.h" />
-    <ClInclude Include="ants\GameLogic\Food.h" />
     <ClInclude Include="ants\GameLogic\Pheremones.h" />
-    <ClInclude Include="ants\GameLogic\GameManager.h" />
     <ClInclude Include="ants\GameScenes\Scene.h" />
     <ClInclude Include="ants\GameScenes\InGame.h" />
     <ClInclude Include="ants\GameScenes\Menu.h" />

@@ -86,12 +86,6 @@
     <ClInclude Include="ants\Server\ServerInfos.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ants\GameLogic\Food.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ants\GameLogic\GameManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="ants\Maze\MazeMeshGenerator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -144,6 +138,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ants\Maze\FoodMeshGenerator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ants\GameScenes\Scene.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
