@@ -1,4 +1,6 @@
+#include <chrono>
 #include <iostream>
+#include <memory>
 
 #include "marble/vendor/imgui/imgui.h"
 #include "marble/vendor/imgui/imgui_impl_glfw.h"
@@ -12,6 +14,9 @@
 #include "GameScenes/Playground.h"
 #include "GameScenes/Menu.h"
 
+#ifndef WIN32
+#define sprintf_s snprintf
+#endif
 
 inline long long nanoTime()
 {

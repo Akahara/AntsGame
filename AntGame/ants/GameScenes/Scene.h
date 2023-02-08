@@ -2,6 +2,7 @@
 
 #include <string>
 #include <functional>
+#include <memory>
 
 #include "marble/vendor/imgui/imgui.h"
 

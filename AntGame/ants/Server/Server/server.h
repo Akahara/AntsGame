@@ -14,7 +14,7 @@
 #include <boost/uuid/uuid_io.hpp> 
 
 
-#include "game.h"
+#include "Game.h"
 #include "constants.h"
 
 

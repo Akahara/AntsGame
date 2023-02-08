@@ -3,6 +3,7 @@
 #include "../Maze/MazeMeshGenerator.h"
 
 #include <vector>
+#include <algorithm>
 
 #include <glm/glm.hpp>
 

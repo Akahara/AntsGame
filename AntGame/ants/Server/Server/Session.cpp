@@ -12,7 +12,7 @@
 
 
 #include "server.h"
-#include "game.h"
+#include "Game.h"
 
 using boost::asio::async_write;
 using boost::asio::buffer;
@@ -94,7 +94,7 @@ void session::handle_read(const error_code& ec, size_t bytes_transferred) {
             // Extract the difficulty wanted for the game
             int difficulty = JSON::getDifficultyJoin(JSON_Property_Tree);
 
-            // FInd a gamé with this difficulty
+            // FInd a gamï¿½ with this difficulty
             p_origin->findGameWithDifficulty(difficulty, UUID, shared_from_this());
         }
         else {

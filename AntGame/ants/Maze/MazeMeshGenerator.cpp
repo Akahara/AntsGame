@@ -1,3 +1,4 @@
+#include <cmath>
 #include "MazeMeshGenerator.h"
 
 /**
@@ -31,7 +32,7 @@ Renderer::Mesh MazeMeshGenerator::generateMazeMesh(const Maze &maze)
     { { +.5f, +.5f, +.5f }, { 1.f, 0.f }, { +s3, +s3, +s3 }, (float)texId, {1.0f, 1.0f, 0.0f}, },
     { { -.5f, +.5f, +.5f }, { 0.f, 0.f }, { -s3, +s3, +s3 }, (float)texId, {1.0f, 1.0f, 0.0f} },
 	*/
-	float s3 = std::sqrtf(3);
+	float s3 = std::sqrt(3);
 	// Generate a bunch of pillars
 	for (unsigned int y = 0; y < height + 1; y++) {
 

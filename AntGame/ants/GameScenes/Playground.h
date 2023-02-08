@@ -5,8 +5,8 @@
 
 #include "Scene.h"
 
-#include "marble/world/Player.h"
-#include "marble/world/Sky.h"
+#include "marble/World/Player.h"
+#include "marble/World/Sky.h"
 #include "marble/World/TerrainGeneration/Terrain.h"
 #include "marble/World/TerrainGeneration/Noise.h"
 #include "marble/Utils/Debug.h"

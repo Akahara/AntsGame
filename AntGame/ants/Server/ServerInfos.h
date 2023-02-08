@@ -43,7 +43,7 @@ static void increaseTilePheromone(const glm::uvec2& pos, const server& server)
 
 static Server::Client::MOVE_LIST computeMoveDirection(const glm::uvec2& old_tile, const glm::uvec2& new_tile) {
 
-	glm::uvec2 delta = old_tile - new_tile;
+	glm::ivec2 delta = old_tile - new_tile;
 	// delta y = -1 --> up 0 (0, 1)
 	// delta y = 1 --> down 1 (0, -1)
 	// delta x = 1 --> left 2 (1, 0)

@@ -1,6 +1,7 @@
 #include "Game.h"
 #include <iostream>
 #include <stdlib.h>
+#include <exception>
 
 
 #include <boost/uuid/uuid.hpp>
@@ -89,7 +90,7 @@ game::game(const int& _difficulty, const int& _max_nb_players, int _size_side_ma
 			}
 		}
 
-		if (!player) throw std::exception("Somehow, we didn't find the player that did the move...");
+		if (!player) throw "Somehow, we didn't find the player that did the move...";
 
 		std::cout << "Player infos : " << std::endl;
 		std::cout << "----- Has food ? " << player->has_food << std::endl;

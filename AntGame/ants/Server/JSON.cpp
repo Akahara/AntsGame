@@ -1,11 +1,15 @@
 
 
 #include "JSON.h"
-#include "server/constants.h"
+#include "Server/constants.h"
 #include "boost/uuid/uuid_io.hpp"
 #include <boost/property_tree/json_parser.hpp>
 
+#ifdef WIN32
 #include <winsock2.h>
+#else
+#include <netinet/in.h>
+#endif
 
 
 std::string JSON::getUUID(const boost::property_tree::ptree& root) {
