@@ -45,6 +45,7 @@ private:
     glm::vec3           m_position;
     float               m_speed;
     float               m_yaw;
+    float m_rotation = 0;
 
     struct ThirdPersonParams {
         glm::vec3 playerForward;

@@ -10,7 +10,8 @@ AntsPlayer::AntsPlayer()   :
 	m_speed(10.f)
 {
 
-	m_mesh = Renderer::createCubeMesh();
+	//m_mesh = Renderer::createCubeMesh();
+	m_mesh = Renderer::loadMeshFromFile("res/meshes/Fantasy ant.obj");
 	m_camera.setProjection(Renderer::PerspectiveProjection{ Mathf::PI / 3.f, 16.f / 9.f });
 
 }
@@ -35,6 +36,13 @@ void AntsPlayer::move(float delta)
         motion += forward;
     if (Inputs::isKeyPressed('S'))
         motion -= forward;
+
+    if (Inputs::isKeyPressed('X'))
+        m_rotation += 10.F;
+
+    if (Inputs::isKeyPressed('C'))
+        m_rotation -= 10.F;
+
     if (motion.x != 0 || motion.z != 0)
         motion = glm::normalize(motion);
 
@@ -90,7 +98,9 @@ void AntsPlayer::repositionCamera()
 
 void AntsPlayer::render(const Renderer::Camera& viewCamera) const
 {
-    Renderer::renderMesh(viewCamera, m_position, { 1,1,1 }, m_mesh);
+    Renderer::renderMesh(viewCamera, m_position, { 1,1,1 }, m_mesh, 
+        {Renderer::ROTATION_AXIS::Y_AXIS, m_rotation}
+    );
 
     glm::vec3 forward{ glm::cos(m_yaw), 0, glm::sin(m_yaw) };
     Renderer::renderDebugLine(viewCamera, m_position, m_position + forward);
