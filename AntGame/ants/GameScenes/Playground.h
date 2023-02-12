@@ -92,7 +92,7 @@ public:
 
 			m_score.setMaze(&m_maze);
 			m_mazeRenderer.buildMaze(&m_maze);
-			m_pManager->scoreSystem = &m_score;
+			m_pManager->setScoreSystem(&m_score);
 		}
 
 		// Mesh and terration generation

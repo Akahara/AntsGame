@@ -3,10 +3,7 @@
 #include "marble/abstraction/Camera.h"
 #include "../Maze/MazeMeshGenerator.h"
 
-class AntsPlayer
-
-{
-
+class AntsPlayer {
 public:
     AntsPlayer();
 

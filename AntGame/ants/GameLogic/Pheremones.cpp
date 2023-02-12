@@ -2,7 +2,70 @@
 
 #include <glad/glad.h>
 #include <glm/gtx/euler_angles.inl>
+
 #include "../Maze/MazeTileSystem.h"
+
+const char *PheremonesManager::BatchRenderer::vertexShaderCode = R"glsl(
+	#version 330 core
+
+	layout(location = 0) in vec3 position;
+	layout(location = 1) in vec3 aColor;
+	layout(location = 2) in vec2 i_uv;
+
+	out vec2 v_TexCoord;
+	out vec4 v_Color;
+	out vec2 o_uv;
+	out vec4 o_pos;
+
+	uniform mat4 u_VP;
+	uniform float u_time;
+
+	void main() {
+		vec4 vertex = vec4(position, 1);
+		vertex.y += cos(u_time);
+		o_uv = i_uv;
+		v_Color = vec4(aColor,1.F);
+		o_pos =  u_VP * vertex;
+		gl_Position = o_pos;
+	};
+)glsl";
+
+const char *PheremonesManager::BatchRenderer::fragmentShaderCode = R"glsl(
+	#version 330 core
+
+	layout(location = 0) out vec4 color;
+
+	in vec4 v_Color;
+	in vec2 o_uv;
+	in vec4 o_pos;
+		
+	uniform sampler2D u_texture;
+	uniform sampler2D u_dudvMap;
+	uniform sampler2D u_normal;
+	uniform float u_time;
+	uniform float u_moveFactor;
+
+	vec3 sunPos = vec3(100,100,100);
+
+	void main() {
+		vec2 screenspace = ((o_pos.xy/o_pos.w)+1) * 0.5;
+
+		vec2 tmp = vec2(screenspace.x,  screenspace.y);
+
+		vec2 distortedTexCoords = texture(u_dudvMap, vec2(o_uv.x + u_moveFactor, o_uv.y)).rg*0.1;
+		distortedTexCoords = o_uv + vec2(distortedTexCoords.x, distortedTexCoords.y+u_moveFactor);
+		vec2 distortion = (texture(u_dudvMap, distortedTexCoords).rg * 2.0 - 1.0) * 0.04f;
+
+		tmp += distortion;
+
+		color.a = texture(u_texture, o_uv).a;
+		color.a = smoothstep(0.9,0.8, length(o_uv*2-1.f));
+		vec3 dis = texture(u_dudvMap, tmp).rgb;
+
+		color.rgb = mix(vec3(dis.r/2.F),v_Color.rgb,0.7);
+		color.rgb *= 2.f;
+	};
+)glsl";
 
 PheremonesManager::PheremonesManager(const MazeProperties& props)
 {
@@ -126,7 +189,7 @@ void PheremonesManager::prepareRendering(float delta, const glm::vec3& playerPos
 			glm::vec3 position = computePheromonePosition({ x,y });
 
 
-			bool active = (scoreSystem) ? scoreSystem->isPickupActive({ x, y }) : false;
+			bool active = (m_scoreSystem) ? m_scoreSystem->isPickupActive({ x, y }) : false;
 			glm::vec3 color = (active) ? glm::lerp(glm::vec3{ 0,1.0,0 }, { 2,0,1.2 }, value) : glm::vec3{ 0,0,0 };
 
 			drawPheromone(position, color, glm::lerp(glm::vec3{ 1,1,1 }, { 4,4,4 }, value), playerPosition);
