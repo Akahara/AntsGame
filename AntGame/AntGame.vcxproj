@@ -158,6 +158,7 @@
     <ClCompile Include="ants\Maze\MazeGeneration_proj\CTile.cpp" />
     <ClCompile Include="ants\Maze\MazeGeneration_proj\libAntMaze.cpp" />
     <ClCompile Include="ants\Maze\MazeMeshGenerator.cpp" />
+    <ClCompile Include="ants\Maze\MazeRenderer.cpp" />
     <ClCompile Include="ants\Maze\MazeTileSystem.cpp" />
     <ClCompile Include="ants\Server\Client\client.cpp" />
     <ClCompile Include="ants\Server\JSON.cpp" />
@@ -187,6 +188,7 @@
     <ClInclude Include="ants\Maze\MazeGeneration_proj\CMazeGenerator.h" />
     <ClInclude Include="ants\Maze\MazeGeneration_proj\CTile.h" />
     <ClInclude Include="ants\Maze\MazeGeneration_proj\libAntMaze.h" />
+    <ClInclude Include="ants\Maze\MazeRenderer.h" />
     <ClInclude Include="ants\Server\Client\client.h" />
     <ClInclude Include="ants\Server\JSON.h" />
     <ClInclude Include="ants\Server\ServerInfos.h" />

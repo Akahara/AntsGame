@@ -69,6 +69,9 @@
     <ClCompile Include="ants\GameScenes\Scene.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ants\Maze\MazeRenderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include=".gitignore" />
@@ -141,6 +144,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ants\GameScenes\Scene.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ants\Maze\MazeRenderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
