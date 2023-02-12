@@ -130,21 +130,20 @@ game::game(const int& _difficulty, const int& _max_nb_players, int _size_side_ma
 		uint8_t actualPosition = getPlayerTile();
 		std::cout << "Server side position : " << player->actual_line << " :" << player->actual_column << std::endl;
 		if (hasFood(actualPosition) && player->has_food == false) {
-			player->has_food == true;
+			player->has_food = true;
 			std::cout << "player : " << boost::uuids::to_string(player->p_uuid) << " has found food ! " << std::endl;
 		}
 
 		// If the player arrrive at Nest with food, he give it to the nest so doesn't has it anymore
 
 		if (isNest(actualPosition) && player->has_food == true) {
-			player->has_food == false;
+			player->has_food = false;
 		}
 
 		/* If the player has food at this moment of code, this means he's on a normal tile, we just increase the pheromons value of this tile */
 
 		if (player->has_food == true) {
 			p_pheromons[getPlayerTileIndice()] += Constants::PHEROMON_DROP_AMOUNT;
-			std::cout << "pheromones at tile : " << actualPosition << " : " << p_pheromons[actualPosition] << std::endl;
 		}
 
 

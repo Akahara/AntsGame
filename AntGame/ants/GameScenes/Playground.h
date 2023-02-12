@@ -13,6 +13,7 @@
 
 #include "../Maze/MazeMeshGenerator.h"
 #include "../Maze/FoodMeshGenerator.h"
+#include "../Maze/MazeRenderer.h"
 #include "../Maze/MazeGeneration_proj/libAntMaze.h"
 #include "../Maze/MazeTileSystem.h"
 #include "../GameLogic/AntsPlayer.h"
@@ -26,7 +27,6 @@
 #include "marble/abstraction/pipeline/VFXPipeline.h"
 #include "marble/World/Props/PropsManager.h"
 
-#include "../GameLogic/Food.h";
 
 class Playground : public Scene {
 private:
@@ -43,19 +43,16 @@ private:
 	Terrain::Terrain  m_terrain;
 	Renderer::Mesh    m_mazeMesh;
 	Renderer::Texture m_sandTexture = Renderer::Texture("res/textures/sand1.jpg");
-	Renderer::Mesh    m_wallMesh;
+	MazeRenderer      m_mazeRenderer;
 
 	visualEffects::VFXPipeline m_pipeline;
 
 	PheremonesManager* m_pManager;
 	World::PropsManager m_props;
 
-	//FoodLogic* m_foodLogic;
 
 	Server::Client* m_client = nullptr; // might change if global state idk
 	server* m_server = nullptr; // might change if global state idk
-
-
 
 public:
 
@@ -63,13 +60,13 @@ public:
 	{
 		// Local server creation
 		{
-		if (!m_client) {
-			/* TODO : fix the crash when quitting the application */
-			m_server = Server::startLocalServer();
-			m_client = Server::setClientConnexion();
-			m_client->join(1);
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
-		}
+			if (!m_client) {
+				/* TODO : fix the crash when quitting the application */
+				m_server = Server::startLocalServer();
+				m_client = Server::setClientConnexion();
+				m_client->join(1);
+				std::this_thread::sleep_for(std::chrono::milliseconds(100));
+			}
 		}
 
 		// Game Logic setup (maze, food, score, pheromones)
@@ -93,8 +90,9 @@ public:
 				}
 			);
 
-			m_score.setMaze(m_maze);
-			m_pManager->scoreSystem = &m_score;
+			m_score.setMaze(&m_maze);
+			m_mazeRenderer.buildMaze(&m_maze);
+			m_pManager->setScoreSystem(&m_score);
 		}
 
 		// Mesh and terration generation
@@ -104,7 +102,6 @@ public:
 			std::for_each(m_fsources.begin(), m_fsources.end(), [&](const World::Prop& source) {m_props.feed(source); });
 			generateTerrain();
 			m_pipeline.registerEffect<visualEffects::Bloom>();
-			m_wallMesh = Renderer::loadMeshFromFile("res/meshes/wall.obj");
 		}
 
 		// Shader Factory
@@ -128,6 +125,10 @@ public:
 			meshShader.setUniform3f("u_SunPos", 1000, 1000, 1000);
 			Renderer::Shader::unbind();
 		}
+
+
+		m_player.setPosition(glm::vec3{ 25 * 2, 0 , 25 * 2 });
+		m_player.setTile({ 2,2 });
 	}
 
 	~Playground() {
@@ -166,7 +167,7 @@ public:
 		glm::uvec2 pos = MazeTileSystem::getTileCoordinates(playerPos,
 			glm::uvec2(m_maze.nbColumn, m_maze.nbLine),
 			{ 0,0,0 },
-			20.F/* CORRIDOR */
+			MazeMeshGenerator::CORRIDOR_SPACE
 		); 
 
 
@@ -222,19 +223,7 @@ public:
 			Renderer::renderMesh(camera, glm::vec3{ 0, 0, 0 }, glm::vec3{ 1, 1, 1 }, chunk.getMesh());
 		}
 
-		Renderer::renderMesh(camera, { 0,0,0 }, { 1,1,1 }, m_mazeMesh);
-
-		// TODO replace the maze mesh by actual walls and pillars meshes
-		// DOTOO do instanced rendering on walls and pillars
-		//for (unsigned int x = 0; x < m_maze.nbLine; x++) {
-		//	for (unsigned int y = 0; y < m_maze.nbColumn; y++) {
-		//		constexpr float W = MazeMeshGenerator::WALL_SIZE;
-		//		constexpr float C = MazeMeshGenerator::CORRIDOR_SPACE;
-		//		constexpr float H = MazeMeshGenerator::WALL_HEIGHT;
-		//		Renderer::renderMesh(camera, { C,0,C/2.f }, { W,H,(C-W)/2 }, m_wallMesh);
-		//	}
-		//}
-
+		m_mazeRenderer.render(camera);
 		m_props.render(camera);
 		m_player.render(camera);
 		m_props.render(camera);
