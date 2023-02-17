@@ -14,7 +14,11 @@
 #include "GameScenes/Playground.h"
 #include "GameScenes/Menu.h"
 
-#ifndef WIN32
+#if defined(WIN32) || defined(_WIN32)
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#else
+#include <sys/signal.h>
 #define sprintf_s snprintf
 #endif
 
@@ -26,7 +30,14 @@ inline long long nanoTime()
 
 int main()
 {
-    
+  #if defined(WIN32) || defined(_WIN32)
+  WSADATA wsa;
+  WSAStartup(MAKEWORD(2, 2), &wsa);
+  #else
+  /* Ignore broken pipe signals. */
+  signal(SIGPIPE, SIG_IGN);
+  #endif
+
   Window::createWindow(16 * 70, 9 * 70, "test");
 
   Window::setVisible(true);
@@ -103,6 +114,9 @@ int main()
     std::this_thread::sleep_for(std::chrono::milliseconds(1500));  
   */
 
+  #if defined(WIN32) || defined(_WIN32)
+  WSACleanup();
+  #endif
 
   return 0;
 }

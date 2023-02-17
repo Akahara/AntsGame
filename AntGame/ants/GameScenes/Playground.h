@@ -2,6 +2,7 @@
 
 #include <glad/glad.h>
 #include <glm/gtc/type_ptr.hpp>
+#include <thread>
 
 #include "Scene.h"
 
@@ -18,15 +19,39 @@
 #include "../GameLogic/AntsPlayer.h"
 #include "../GameLogic/Score.h"
 #include "../GameLogic/Pheremones.h"
-#include "../Server/ServerInfos.h"
-#include "../Server/Client/client.h"
-#include "../Server/hostDebug.h"
-#include "../Server/Server/server.h"
+#include "../Client/client.h"
 
 #include "marble/abstraction/pipeline/VFXPipeline.h"
 #include "marble/World/Props/PropsManager.h"
 
 #include "../GameLogic/Food.h";
+
+static Server::Client::MOVE_LIST computeMoveDirection(const glm::uvec2& old_tile, const glm::uvec2& new_tile) {
+	glm::ivec2 delta = old_tile - new_tile;
+	// delta y = -1 --> up 0 (0, 1)
+	// delta y = 1 --> down 1 (0, -1)
+	// delta x = 1 --> left 2 (1, 0)
+	// delta x = -1 --> right 3 (-1, 0)
+
+	switch (delta.y) {
+		case 0:
+			break;
+		case 1:
+			return Server::Client::MOVE_LIST::UP;
+
+		case -1:
+			return Server::Client::MOVE_LIST::DOWN;
+	}
+
+	switch (delta.x) {
+		case 1:
+			return Server::Client::MOVE_LIST::LEFT;
+
+		case -1:
+			return Server::Client::MOVE_LIST::RIGHT;
+	}
+	return Server::Client::MOVE_LIST::WTF; // how
+}
 
 class Playground : public Scene {
 private:
@@ -53,23 +78,26 @@ private:
 	//FoodLogic* m_foodLogic;
 
 	Server::Client* m_client = nullptr; // might change if global state idk
-	server* m_server = nullptr; // might change if global state idk
-
-
 
 public:
 
 	Playground() 
 	{
 		// Local server creation
-		{
 		if (!m_client) {
 			/* TODO : fix the crash when quitting the application */
-			m_server = Server::startLocalServer();
-			m_client = Server::setClientConnexion();
+			std::string adress = "127.0.0.1";
+			unsigned short port = 8080;
+
+			// Client client1{ io_context1, adress, port };
+			m_client = new Server::Client(adress, port);
+
 			m_client->join(1);
-			std::this_thread::sleep_for(std::chrono::milliseconds(100));
-		}
+
+			while (!m_client->getMaze().has_value()) {
+				m_client->listenClient();
+				std::this_thread::sleep_for(std::chrono::milliseconds(20));
+			}
 		}
 
 		// Game Logic setup (maze, food, score, pheromones)
@@ -173,7 +201,7 @@ public:
 		if (pos != m_player.getTile()) {
 
 			/* Compute the move and update the player's tile */
-			Server::Client::MOVE_LIST direction = Server::computeMoveDirection(m_player.getTile(), pos);
+			Server::Client::MOVE_LIST direction = computeMoveDirection(m_player.getTile(), pos);
 			m_client->move(direction);
 			m_player.setTile(pos);
 			
