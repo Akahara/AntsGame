@@ -59,7 +59,7 @@ void Client::join(int _difficulty) {
     std::cout << "on envoi ca :" << str << "\n";
   }
 
-  int ret = write(fd, message_to_join.data(), message_to_join.size());
+  int ret = send(fd, (const char *)message_to_join.data(), message_to_join.size(), 0);
 
   if (ret != -1) {
     std::cout << "JOIN SENT" << std::endl;
@@ -77,7 +77,7 @@ void Client::move(MOVE_LIST _move) {
     std::cout << "on envoi ca :" << str << "\n";
   }
 
-  int ret = write(fd, message_move.data(), message_move.size());
+  int ret = send(fd, (const char *)message_move.data(), message_move.size(), 0);
 
   if (ret == -1) {
     std::cout << "send failed" << std::endl;
@@ -87,7 +87,7 @@ void Client::move(MOVE_LIST _move) {
 void Client::listenClient() {
   // Extract the data from buffer to a const buffer
   std::vector<uint8_t> buffer(8192);
-  ssize_t count = read(fd, buffer.data(), buffer.size());
+  ssize_t count = recv(fd, (char *)buffer.data(), buffer.size(), 0);
 
   if (count == -1) {
     std::cout << "recv failed" << std::endl;
