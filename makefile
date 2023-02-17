@@ -65,12 +65,8 @@ SRC_ANTGAME := $(ANT_GAME)/ants/GameLogic/Pheremones.cpp \
 	$(ANT_GAME)/ants/Maze/MazeGeneration_proj/libAntMaze.cpp \
 	$(ANT_GAME)/ants/Maze/MazeMeshGenerator.cpp \
 	$(ANT_GAME)/ants/Maze/MazeTileSystem.cpp \
-	$(ANT_GAME)/ants/Server/Client/client.cpp \
-	$(ANT_GAME)/ants/Server/Server/Game.cpp \
-	$(ANT_GAME)/ants/Server/Server/Session.cpp \
-	$(ANT_GAME)/ants/Server/Server/Constants.cpp \
-	$(ANT_GAME)/ants/Server/Server/Server.cpp \
-	$(ANT_GAME)/ants/Server/JSON.cpp \
+	$(ANT_GAME)/ants/Client/client.cpp \
+	$(ANT_GAME)/ants/Client/JSON.cpp \
 	$(ANT_GAME)/ants/GameScenes/Scene.cpp
 
 OBJ_ANTGAME := $(SRC_ANTGAME:.cpp=.o)
