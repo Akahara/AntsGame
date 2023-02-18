@@ -1,4 +1,6 @@
 #include "client.h"
+#include <cerrno>
+#include <cstdlib>
 #include <cstring>
 #include <functional>
 #include <iostream>
@@ -30,6 +32,20 @@ Client::Client(std::string address, unsigned short port) {
 
   struct sockaddr_in addr = {0};
   memset(&addr, 0, sizeof(struct sockaddr_in));
+
+  // Make socket non-blocking
+  #if defined(WIN32) || defined(_WIN32)
+  unsigned long mode = 1;
+  ioctlsocket(fd, FIONBIO, &mode);
+  #else
+  int flags = fcntl(socket, F_GETFL, 0);
+  if (flags == -1)
+    return true;
+
+  /* Clear the blocking flag. */
+  flags = flags | O_NONBLOCK;
+  return fcntl(socket, F_SETFL, flags) == -1;
+  #endif
 
   addr.sin_family = AF_INET;
   
@@ -89,6 +105,13 @@ void Client::listenClient() {
   std::vector<uint8_t> buffer(8192);
   ssize_t count = recv(fd, (char *)buffer.data(), buffer.size(), 0);
 
+  #if defined(WIN32) || defined(_WIN32)
+  if (WSAGetLastError() == WSAEWOULDBLOCK)
+  #else
+  if (errno == EWOULDBLOCK)
+  #endif
+    return;
+
   if (count == -1) {
     std::cout << "recv failed" << std::endl;
     return;
@@ -98,6 +121,7 @@ void Client::listenClient() {
   buffer.resize(count);
 
   for (auto response : handler.ProcessData(buffer)) {
+    std::cout << "received " << std::string(response.begin(), response.end()) << std::endl;
     auto js = json::parse(response);
 
     // Extract the type of message

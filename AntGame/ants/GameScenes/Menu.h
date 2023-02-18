@@ -10,7 +10,7 @@
 class Menu : public Scene {
 private:
     Renderer::Texture m_backgroundTexture;
-	char        m_hostIp[32]     = "localhost";
+	char        m_hostIp[32]     = "127.0.0.1";
 	std::string m_localIpAddress = "pending...";
 
 public:
@@ -62,7 +62,7 @@ public:
 
 		if (ImGui::Button("Play")) {
 		  Window::captureMouse(true);
-		  SceneManager::switchToScene(std::make_unique<Playground>());
+		  SceneManager::switchToScene(std::make_unique<Playground>(m_hostIp, 8080));
 		}
 
 		ImGui::SetWindowSize({ 0,0 }, ImGuiCond_Always);

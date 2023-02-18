@@ -7,7 +7,12 @@ CXXFLAGS := $(CFLAGS) -std=c++2b
 LDFLAGS := -O0 -g
 
 FLAGS := -IMarbleEngine/Libraries/include -IMarbleEngine
-LIBS := -lglfw -lm
+
+ifeq ($(OS),Windows_NT)
+	LIBS := -lglfw3 -lws2_32
+else
+	LIBS := -lglfw -lm
+endif
 
 MARBLE_ENGINE := MarbleEngine
 ANT_GAME := AntGame
@@ -64,6 +69,7 @@ SRC_ANTGAME := $(ANT_GAME)/ants/GameLogic/Pheremones.cpp \
 	$(ANT_GAME)/ants/Maze/MazeGeneration_proj/CTile.cpp \
 	$(ANT_GAME)/ants/Maze/MazeGeneration_proj/libAntMaze.cpp \
 	$(ANT_GAME)/ants/Maze/MazeMeshGenerator.cpp \
+	$(ANT_GAME)/ants/Maze/MazeRenderer.cpp \
 	$(ANT_GAME)/ants/Maze/MazeTileSystem.cpp \
 	$(ANT_GAME)/ants/Client/client.cpp \
 	$(ANT_GAME)/ants/Client/JSON.cpp \

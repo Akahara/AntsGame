@@ -76,47 +76,39 @@ private:
 	World::PropsManager m_props;
 
 
-	Server::Client* m_client = nullptr; // might change if global state idk
+	Server::Client m_client; // might change if global state idk
 
 public:
 
-	Playground() 
+	Playground(const std::string &address, unsigned short port):
+		m_client(address, port)
 	{
 		// Local server creation
-		if (!m_client) {
-			/* TODO : fix the crash when quitting the application */
-			std::string adress = "127.0.0.1";
-			unsigned short port = 8080;
+		m_client.join(1);
 
-			// Client client1{ io_context1, adress, port };
-			m_client = new Server::Client(adress, port);
-
-			m_client->join(1);
-
-			while (!m_client->getMaze().has_value()) {
-				m_client->listenClient();
-				std::this_thread::sleep_for(std::chrono::milliseconds(20));
-			}
+		while (!m_client.getMaze().has_value()) {
+			m_client.listenClient();
+			std::this_thread::sleep_for(std::chrono::milliseconds(20));
 		}
 
 		// Game Logic setup (maze, food, score, pheromones)
 		{
 			m_maze = Maze{
-				m_client->getMaze()->nbColumn,
-				m_client->getMaze()->nbLine,
-				m_client->getMaze()->nestColumn,
-				m_client->getMaze()->nestLine,
-				m_client->getMaze()->tiles
+				m_client.getMaze()->nbColumn,
+				m_client.getMaze()->nbLine,
+				m_client.getMaze()->nestColumn,
+				m_client.getMaze()->nestLine,
+				m_client.getMaze()->tiles
 			};
 
 			m_player.setMaze(m_maze);
 			//m_foodLogic = new FoodLogic(m_maze);
 			m_pManager = new PheremonesManager(
 				PheremonesManager::MazeProperties{
-				glm::uvec2(m_client->getMaze()->nbColumn,m_client->getMaze()->nbLine),
+				glm::uvec2(m_client.getMaze()->nbColumn,m_client.getMaze()->nbLine),
 				glm::vec3(0,0,0),
 				5.f,20.f,
-				*m_client->getMaze()
+				*m_client.getMaze()
 				}
 			);
 
@@ -189,8 +181,8 @@ public:
 
 	void step(float delta) override
 	{
+		m_client.listenClient();
 		m_realTime += delta;
-
 		
 		// Tile checks
 		glm::vec3 playerPos = m_player.getPosition();
@@ -205,15 +197,16 @@ public:
 
 			/* Compute the move and update the player's tile */
 			Server::Client::MOVE_LIST direction = computeMoveDirection(m_player.getTile(), pos);
-			m_client->move(direction);
+			m_client.move(direction);
 			m_player.setTile(pos);
 			
-			/* Get all tiles pheromone value */
-			std::vector<float> p = m_client->getPheromones();
-			std::for_each(p.begin(), p.end(), [](const float& f) {std::cout << "," << f; });
-			std::cout << std::endl;
-			m_pManager->setPheromones(m_client->getPheromones());
 		}
+		
+		/* Get all tiles pheromone value */
+		std::vector<float> p = m_client.getPheromones();
+		std::for_each(p.begin(), p.end(), [](const float& f) {std::cout << "," << f; });
+		std::cout << std::endl;
+		m_pManager->setPheromones(m_client.getPheromones());
 
 		// Fake gravity stuff
 		if (m_terrain.isInSamplableRegion(playerPos.x, playerPos.z) && !m_useDbgPlayer)
