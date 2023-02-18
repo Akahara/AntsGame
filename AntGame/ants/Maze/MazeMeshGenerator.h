@@ -16,7 +16,7 @@ constexpr unsigned char WEST     = 8;
 constexpr unsigned char HAS_FOOD = 16;
 constexpr unsigned char HAS_NEST = 32;
 
-constexpr float WALL_SIZE = 5.f;
+constexpr float WALL_SIZE = 5.f; // the width of a wall, also the side length of pillars
 constexpr float WALL_HEIGHT = 20.F;
 constexpr float CORRIDOR_SPACE = 20.F;
 

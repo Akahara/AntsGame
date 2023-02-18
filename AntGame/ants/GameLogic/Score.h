@@ -26,10 +26,10 @@ public:
     : m_maze(nullptr), m_score(0), m_hasFood(0)
   { }
 
-  void setMaze(const Maze &maze)
+  void setMaze(const Maze *maze)
   {
-    m_maze = &maze;
-    m_collectedPickups.push_back({ maze.nestLine, maze.nestColumn });
+    m_maze = maze;
+    m_collectedPickups.push_back({ maze->nestLine, maze->nestColumn });
   }
 
   void step(glm::vec3 playerPosition);
