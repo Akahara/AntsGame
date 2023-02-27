@@ -18,6 +18,7 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <sys/socket.h>
+#include <sys/fcntl.h>
 #endif
 
 bool VERBOSE = true;
@@ -33,20 +34,6 @@ Client::Client(std::string address, unsigned short port) {
   struct sockaddr_in addr = {0};
   memset(&addr, 0, sizeof(struct sockaddr_in));
 
-  // Make socket non-blocking
-  #if defined(WIN32) || defined(_WIN32)
-  unsigned long mode = 1;
-  ioctlsocket(fd, FIONBIO, &mode);
-  #else
-  int flags = fcntl(socket, F_GETFL, 0);
-  if (flags == -1)
-    return true;
-
-  /* Clear the blocking flag. */
-  flags = flags | O_NONBLOCK;
-  return fcntl(socket, F_SETFL, flags) == -1;
-  #endif
-
   addr.sin_family = AF_INET;
   
   if (inet_pton(AF_INET, address.c_str(), &addr.sin_addr) == -1) {
@@ -60,6 +47,22 @@ Client::Client(std::string address, unsigned short port) {
     std::cerr << "Can't connect to " << address << std::endl;
     return;
   }
+
+  // Make socket non-blocking
+  #if defined(WIN32) || defined(_WIN32)
+  unsigned long mode = 1;
+  ioctlsocket(fd, FIONBIO, &mode);
+  #else
+  int flags = fcntl(fd, F_GETFL, 0);
+  if (flags == -1) {
+    std::cerr << "fcntl() retourned -1" << std::endl;
+    return;
+  }
+
+  if (fcntl(fd, F_SETFL, flags | O_NONBLOCK) == -1) {
+    perror("fcntl");
+  }
+  #endif
 }
 
 Client::~Client() {
@@ -108,7 +111,7 @@ void Client::listenClient() {
   #if defined(WIN32) || defined(_WIN32)
   if (WSAGetLastError() == WSAEWOULDBLOCK)
   #else
-  if (errno == EWOULDBLOCK)
+  if ((count == -1 || count == 0) && errno == EWOULDBLOCK)
   #endif
     return;
 
