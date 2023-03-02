@@ -11,7 +11,7 @@ AntsPlayer::AntsPlayer()   :
 {
 
 	//m_mesh = Renderer::createCubeMesh();
-	m_mesh = Renderer::loadMeshFromFile("res/meshes/Fantasy ant.obj");
+	m_mesh = Renderer::loadMeshFromFile("res/meshes/Fantasy ant.obj"); // holy shit !
 	m_camera.setProjection(Renderer::PerspectiveProjection{ Mathf::PI / 3.f, 16.f / 9.f });
 
 }
@@ -98,7 +98,7 @@ void AntsPlayer::repositionCamera()
 
 void AntsPlayer::render(const Renderer::Camera& viewCamera) const
 {
-    Renderer::renderMesh(viewCamera, m_position, { 1,1,1 }, m_mesh, 
+    Renderer::renderMesh(viewCamera, m_position, { 0.5,0.5,0.5 }, m_mesh, 
         {Renderer::ROTATION_AXIS::Y_AXIS, m_rotation}
     );
 

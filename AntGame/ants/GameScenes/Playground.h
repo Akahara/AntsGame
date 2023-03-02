@@ -99,9 +99,12 @@ public:
 		{
 			m_mazeMesh = MazeMeshGenerator::generateMazeMesh(m_maze);
 			std::vector<World::Prop> m_fsources = MazeMeshGenerator::generateFoodSources(m_maze);
+			World::Prop m_nestMesh = MazeMeshGenerator::generateNest(m_maze);
 			std::for_each(m_fsources.begin(), m_fsources.end(), [&](const World::Prop& source) {m_props.feed(source); });
+			m_props.feed(m_nestMesh);
 			generateTerrain();
 			m_pipeline.registerEffect<visualEffects::Bloom>();
+			
 		}
 
 		// Shader Factory
@@ -129,6 +132,8 @@ public:
 
 		m_player.setPosition(glm::vec3{ 25 * 2, 0 , 25 * 2 });
 		m_player.setTile({ 2,2 });
+
+		
 	}
 
 	~Playground() {
