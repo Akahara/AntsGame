@@ -7,7 +7,8 @@
 AntsPlayer::AntsPlayer()   :
 	m_tps {},
 	m_position{}, m_yaw{ 0 },
-	m_speed(10.f)
+	m_speed(10.f),
+    m_MeshSize{0.5}
 {
 
 	//m_mesh = Renderer::createCubeMesh();
@@ -19,29 +20,73 @@ AntsPlayer::AntsPlayer()   :
 void AntsPlayer::step(float delta) 
 {
 	move(delta);
+
+
+
+    if (!m_isMoving && m_moveDuration > 1) {
+        m_moveDuration --;
+        
+
+    }
+
+    if (m_isMoving) {
+
+        m_moveDuration++;
+        m_moveDuration = std::min(m_moveDuration, 30);
+        m_isMoving = false;
+
+    }
+
+    float flatness = 0.5f / m_moveDuration;
+    glm::vec3 size = { 0.5, flatness, 0.5 };
+    setMeshSize(size);
 	repositionCamera();
+}
+
+void AntsPlayer::rotate(float theta) {
+    m_rotation += theta;
 }
 
 void AntsPlayer::move(float delta)
 {
+    
     glm::vec3 forward{ glm::cos(m_yaw), 0, glm::sin(m_yaw) };
     glm::vec3 right = glm::cross(forward, glm::vec3{ 0,1,0 });
 
     glm::vec3 motion{ 0 };
-    if (Inputs::isKeyPressed('A'))
+    if (Inputs::isKeyPressed('A')) {
+
         motion -= right;
-    if (Inputs::isKeyPressed('D'))
+        m_isMoving = true;
+    }
+    if (Inputs::isKeyPressed('D')){
+
         motion += right;
-    if (Inputs::isKeyPressed('W'))
+
+        m_isMoving = true;
+    
+    }
+    if (Inputs::isKeyPressed('W')){
+
         motion += forward;
-    if (Inputs::isKeyPressed('S'))
+
+        m_isMoving = true;
+    }
+    if (Inputs::isKeyPressed('S')) {
+
         motion -= forward;
+        m_isMoving = true;
+    }
 
     if (Inputs::isKeyPressed('X'))
-        m_rotation += 10.F;
+        m_rotation += 1.F;
 
     if (Inputs::isKeyPressed('C'))
-        m_rotation -= 10.F;
+        m_rotation -= 1.F;
+
+    if (m_rotation < 0) m_rotation = 355.F;
+    m_rotation = std::fmod(m_rotation, 360.F);
+
 
     if (motion.x != 0 || motion.z != 0)
         motion = glm::normalize(motion);
@@ -98,14 +143,16 @@ void AntsPlayer::repositionCamera()
 
 void AntsPlayer::render(const Renderer::Camera& viewCamera) const
 {
-    Renderer::renderMesh(viewCamera, m_position, { 0.5,0.5,0.5 }, m_mesh, 
+    Renderer::renderMesh(viewCamera, m_position, m_MeshSize, m_mesh,
         {Renderer::ROTATION_AXIS::Y_AXIS, m_rotation}
     );
 
+    /*
     glm::vec3 forward{ glm::cos(m_yaw), 0, glm::sin(m_yaw) };
     Renderer::renderDebugLine(viewCamera, m_position, m_position + forward);
     Renderer::renderDebugLine(viewCamera, m_position, m_position - forward, { 1,0,0,1 });
     Renderer::renderDebugLine(viewCamera, m_position, m_camera.getPosition(), { 1,1,0,1 });
+    */
 
 }
 

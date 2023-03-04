@@ -97,7 +97,6 @@ Renderer::Mesh MazeMeshGenerator::generateMazeMesh(const Maze &maze)
 		}
 	}
 
-	std::cout << "stop" << std::endl;;
 
 	/**
 	* This lambda adds 6 triangles in the indicies vector.
@@ -231,6 +230,8 @@ Renderer::Mesh MazeMeshGenerator::generateMazeMesh(const Maze &maze)
 		}
 
 	}
+
+
 
 	return Renderer::Mesh(verticies, indicies);
 

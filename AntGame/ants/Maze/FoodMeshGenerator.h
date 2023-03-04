@@ -47,7 +47,7 @@ namespace MazeMeshGenerator
 	std::vector<World::Prop> generateFoodSources(const Maze& maze, const glm::vec3& mazeStartingPoint=glm::vec3{0,0,0})
 	{
 
-		static std::shared_ptr<Renderer::Mesh> model = std::make_shared<Renderer::Mesh>(Renderer::loadMeshFromFile("res/meshes/cube.obj"));
+		static std::shared_ptr<Renderer::Mesh> model = std::make_shared<Renderer::Mesh>(Renderer::loadMeshFromFile("res/meshes/croissant_01_L0.obj"));
 
 
 		std::vector<World::Prop> res;

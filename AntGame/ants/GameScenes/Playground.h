@@ -28,6 +28,8 @@
 #include "marble/World/Props/PropsManager.h"
 
 
+static glm::vec2 actual_mesh_forward = {0,0};
+
 class Playground : public Scene {
 private:
 	World::Sky m_sky{ World::Sky::SkyboxesType::SAND };
@@ -43,6 +45,7 @@ private:
 	Terrain::Terrain  m_terrain;
 	Renderer::Mesh    m_mazeMesh;
 	Renderer::Texture m_sandTexture = Renderer::Texture("res/textures/sand1.jpg");
+	Renderer::Texture m_wallpoly = Renderer::Texture("res/textures/wallpoly.jpg");
 	MazeRenderer      m_mazeRenderer;
 
 	visualEffects::VFXPipeline m_pipeline;
@@ -192,7 +195,7 @@ public:
 
 		// Fake gravity stuff
 		if (m_terrain.isInSamplableRegion(playerPos.x, playerPos.z) && !m_useDbgPlayer)
-			playerPos.y = m_terrain.getHeight(playerPos.x, playerPos.z) + 1.5f;
+			playerPos.y = m_terrain.getHeight(playerPos.x, playerPos.z) + 0.25f;
 
 		m_player.setPosition(playerPos);
 		m_player.updateCamera();
@@ -202,7 +205,19 @@ public:
 			m_debugPlayer.step(delta);
 			m_pManager->step(delta, m_debugPlayer.getCamera().getPosition());
 		} else {
+
+
+
+			float rotation = m_player.getRotation() * 3.14/180.F;
+
+			float yaw = m_player.getCamera().getYaw() + Mathf::PI;
+			float diff = (yaw - rotation) * 180.F/Mathf::PI;
+			if (diff < -180.F) diff += 360.f;
+
+			m_player.rotate(diff);
 			m_player.step(delta);
+
+
 			m_pManager->step(delta, m_player.getCamera().getPosition());
 		}
 
@@ -227,7 +242,8 @@ public:
 
 			Renderer::renderMesh(camera, glm::vec3{ 0, 0, 0 }, glm::vec3{ 1, 1, 1 }, chunk.getMesh());
 		}
-
+		
+		m_wallpoly.bind(0);
 		m_mazeRenderer.render(camera);
 		m_props.render(camera);
 		m_player.render(camera);
@@ -243,6 +259,10 @@ public:
 				}
 			}
 		}
+		Renderer::renderDebugLine(m_player.getCamera(), m_player.getPosition(),
+			m_player.getPosition() + glm::vec3{ actual_mesh_forward.x, 0, actual_mesh_forward.y }, {0,1,0,1});
+
+
 
 		m_pipeline.unbind();
 		m_pipeline.renderPipeline();

@@ -19,6 +19,8 @@ public:
     inline glm::uvec2 getTile() const {
         return m_tile;
     }
+    inline float getRotation() const { return m_rotation; }
+
 
     inline void setTPSDistances(glm::vec2 dh) { 
         m_tps.distanceFromSubject.x = dh.x;
@@ -30,6 +32,9 @@ public:
     }
     inline void setPosition(glm::vec3 v) {  m_position = v; }
     inline void setMaze(const Maze &maze) { m_tps.maze = &maze; }
+    void rotate(float theta);
+    inline void setMeshSize(const glm::vec3& size) { m_MeshSize = size; }
+
    
 private:
     void move(float delta);
@@ -41,11 +46,19 @@ private:
 
     Renderer::Camera    m_camera;
     Renderer::Mesh      m_mesh;
+    
+    // Bullshit fun
+    glm::vec3 m_MeshSize;
+    int m_moveDuration = 0;
+    bool m_isMoving = false;
+
+
    	glm::uvec2          m_tile;
     glm::vec3           m_position;
     float               m_speed;
     float               m_yaw;
     float m_rotation = 0;
+
 
     struct ThirdPersonParams {
         glm::vec3 playerForward;
