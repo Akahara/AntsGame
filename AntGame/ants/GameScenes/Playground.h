@@ -7,6 +7,7 @@
 
 #include "marble/World/Player.h"
 #include "marble/World/Sky.h"
+#include "marble/World/Light/LightManager.h"
 #include "marble/World/TerrainGeneration/Terrain.h"
 #include "marble/World/TerrainGeneration/Noise.h"
 #include "marble/Utils/Debug.h"
@@ -49,9 +50,18 @@ private:
 	MazeRenderer      m_mazeRenderer;
 
 	visualEffects::VFXPipeline m_pipeline;
+	World::LightRenderer m_lights;
 
 	PheremonesManager* m_pManager;
 	World::PropsManager m_props;
+
+	Renderer::FrameBufferObject m_fbo;
+	Renderer::Texture m_depth = Renderer::Texture::createDepthTexture(Window::getWinWidth(), Window::getWinHeight());
+	Renderer::Texture m_target{ Window::getWinWidth(), Window::getWinHeight() };
+	Renderer::BlitPass m_depthblit{ "res/shaders/shadows_testblitdepth.fs" };
+
+	Renderer::FrameBufferObject m_fboNormal;
+	Renderer::Texture m_texNormal{ Window::getWinWidth(), Window::getWinHeight() };
 
 
 	Server::Client* m_client = nullptr; // might change if global state idk
@@ -61,16 +71,20 @@ public:
 
 	Playground() 
 	{
+		m_fbo.setTargetTexture(m_target);
+		m_fbo.setDepthTexture(m_depth);
+		
 		// Local server creation
 		{
 			if (!m_client) {
-				/* TODO : fix the crash when quitting the application */
+				// TODO : fix the crash when quitting the application 
 				m_server = Server::startLocalServer();
 				m_client = Server::setClientConnexion();
 				m_client->join(1);
 				std::this_thread::sleep_for(std::chrono::milliseconds(100));
 			}
 		}
+		
 
 		// Game Logic setup (maze, food, score, pheromones)
 		{
@@ -83,7 +97,6 @@ public:
 			};
 
 			m_player.setMaze(m_maze);
-			//m_foodLogic = new FoodLogic(m_maze);
 			m_pManager = new PheremonesManager(
 				PheremonesManager::MazeProperties{
 				glm::uvec2(m_client->getMaze()->nbColumn,m_client->getMaze()->nbLine),
@@ -106,9 +119,11 @@ public:
 			std::for_each(m_fsources.begin(), m_fsources.end(), [&](const World::Prop& source) {m_props.feed(source); });
 			m_props.feed(m_nestMesh);
 			generateTerrain();
+			//m_pipeline.registerEffect<visualEffects::SSAO>();
 			m_pipeline.registerEffect<visualEffects::Bloom>();
-			
+			m_pipeline.sortPipeline();
 		}
+		
 
 		// Shader Factory
 		{
@@ -135,6 +150,8 @@ public:
 
 		m_player.setPosition(glm::vec3{ 25 * 2, 0 , 25 * 2 });
 		m_player.setTile({ 2,2 });
+		m_useDbgPlayer = true;
+
 
 		
 	}
@@ -169,8 +186,8 @@ public:
 	{
 		m_realTime += delta;
 
-		
 		// Tile checks
+		
 		glm::vec3 playerPos = m_player.getPosition();
 		glm::uvec2 pos = MazeTileSystem::getTileCoordinates(playerPos,
 			glm::uvec2(m_maze.nbColumn, m_maze.nbLine),
@@ -181,12 +198,12 @@ public:
 
 		if (pos != m_player.getTile()) {
 
-			/* Compute the move and update the player's tile */
+			// Compute the move and update the player's tile 
 			Server::Client::MOVE_LIST direction = Server::computeMoveDirection(m_player.getTile(), pos);
 			m_client->move(direction);
 			m_player.setTile(pos);
 			
-			/* Get all tiles pheromone value */
+			// Get all tiles pheromone value 
 			std::vector<float> p = m_client->getPheromones();
 			std::for_each(p.begin(), p.end(), [](const float& f) {std::cout << "," << f; });
 			std::cout << std::endl;
@@ -222,6 +239,8 @@ public:
 		}
 
 		m_score.step(m_player.getPosition());
+		
+
 	}
 		
 	void onRender() override
@@ -230,51 +249,76 @@ public:
 
 		Renderer::Frustum cameraFrustum = Renderer::Frustum::createFrustumFromPerspectiveCamera(camera);
 
-		m_pipeline.bind();
-		Renderer::clear();
 
-		m_sandTexture.bind(0);
-		for (const auto& [position, chunk] : m_terrain.getChunks()) {
-			const AABB& chunkAABB = chunk.getMesh().getBoundingBox();
+		auto renderFn = [&]() {
 
-			if (!cameraFrustum.isOnFrustum(chunkAABB))
-				continue;
+			Renderer::clear();
 
-			Renderer::renderMesh(camera, glm::vec3{ 0, 0, 0 }, glm::vec3{ 1, 1, 1 }, chunk.getMesh());
-		}
 		
-		m_wallpoly.bind(0);
-		m_mazeRenderer.render(camera);
-		m_props.render(camera);
-		m_player.render(camera);
-		m_props.render(camera);
-		m_sky.render(camera);
-		m_pManager->render(camera); 
+			m_sandTexture.bind(0);
+			for (const auto& [position, chunk] : m_terrain.getChunks()) {
+				const AABB& chunkAABB = chunk.getMesh().getBoundingBox();
 
-		if (DebugWindow::renderAABB()) {
-			for (unsigned int y = 0; y < 5; y++) {
-				for (unsigned int x = 0; x < 5; x++) {
-					AABB aabb = AABB::make_aabb(glm::vec3(x * 20, 0, y * 20), glm::vec3((x + 1) * 20, 5.f, (y + 1) * 20));
-					Renderer::renderAABBDebugOutline(camera, aabb);
+				if (!cameraFrustum.isOnFrustum(chunkAABB))
+					continue;
+
+				Renderer::renderMesh(camera, glm::vec3{ 0, 0, 0 }, glm::vec3{ 1, 1, 1 }, chunk.getMesh());
+			}
+
+			m_wallpoly.bind(0);
+			m_mazeRenderer.render(camera);
+			m_props.render(camera);
+			m_player.render(camera);
+			m_props.render(camera);
+			m_sky.render(camera);
+			m_pManager->render(camera);
+
+			if (DebugWindow::renderAABB()) {
+				for (unsigned int y = 0; y < 5; y++) {
+					for (unsigned int x = 0; x < 5; x++) {
+						AABB aabb = AABB::make_aabb(glm::vec3(x * 20, 0, y * 20), glm::vec3((x + 1) * 20, 5.f, (y + 1) * 20));
+						Renderer::renderAABBDebugOutline(camera, aabb);
+					}
 				}
 			}
-		}
-		Renderer::renderDebugLine(m_player.getCamera(), m_player.getPosition(),
-			m_player.getPosition() + glm::vec3{ actual_mesh_forward.x, 0, actual_mesh_forward.y }, {0,1,0,1});
+			Renderer::renderDebugLine(m_player.getCamera(), m_player.getPosition(),
+				m_player.getPosition() + glm::vec3{ actual_mesh_forward.x, 0, actual_mesh_forward.y }, { 0,1,0,1 });
+		
+
+		};
 
 
+		m_fbo.bind();
+		renderFn();
+		m_fbo.unbind();
 
-		m_pipeline.unbind();
-		m_pipeline.renderPipeline();
+		m_fbo.getTarget()->bind();
+		Renderer::BlitPass{}.doBlit();
+
+		
+		//m_pipeline.renderPipeline();
+
+		
 	}
 
 	void onImGuiRender() override
 	{
 		ImGui::Text("This is the playground for tests ! ");
+		ImGui::Image(m_pipeline.getDepthTexture().getId(), { 16 * 30, 9 * 30 }, {0,1}, {1,0},{1,0,0,1});
+		ImGui::Image(m_fbo.getTarget()->getId(), { 16 * 30, 9 * 30 }, {0,1}, {1,0});
+		ImGui::Begin("Actual Scene");
+		ImGui::Image(m_pipeline.getTargetTexture().getId(), {16 * 30, 9 * 30}, {0,1}, {1,0});
+		ImGui::End();
 
+		static float zfar = 1.f;
+		if (ImGui::DragFloat("zfar", &zfar, 0.5)) {
+			m_depthblit.getShader().bind();
+			m_depthblit.getShader().setUniform1f("u_zFar", zfar);
+			m_depthblit.getShader().unbind();
+		}
 		ImGui::Checkbox("Use debug player", &m_useDbgPlayer);
-
 		m_pipeline.onImGuiRender();
+		m_lights.onImguiRender();
 
 		ImGui::SetNextWindowPos({ 0, 0 });
 		ImGui::SetNextWindowSize({ 600, 200 });

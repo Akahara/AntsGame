@@ -25,8 +25,7 @@ void AntsPlayer::step(float delta)
 
     if (!m_isMoving && m_moveDuration > 1) {
         m_moveDuration --;
-        
-
+       
     }
 
     if (m_isMoving) {

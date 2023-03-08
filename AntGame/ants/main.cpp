@@ -10,9 +10,12 @@
 #include "marble/abstraction/Inputs.h"
 #include "marble/Utils/Debug.h"
 
+
 #include "GameScenes/Scene.h"
 #include "GameScenes/Playground.h"
 #include "GameScenes/Menu.h"
+#include "GameScenes/DeferredScene.h"
+
 
 #ifndef WIN32
 #define sprintf_s snprintf
@@ -42,7 +45,8 @@ int main()
   Renderer::SkyRenderer::init();
   Renderer::init();
 
-  SceneManager::switchToScene(std::make_unique<Menu>());
+  SceneManager::switchToScene(std::make_unique<DeferredScene>());
+
 
   //===========================================================//
 
@@ -90,18 +94,6 @@ int main()
   ImGui_ImplGlfw_Shutdown();
   ImGui_ImplOpenGL3_Shutdown();
   ImGui::DestroyContext();
-    
-  /*
-    std::string adress = "192.168.1.23";
-    unsigned short port = 88000;
-    boost::asio::io_context io_context1;
-
-    Client client1{ io_context1, adress, port };
-
-    client1.join(1);
-
-    std::this_thread::sleep_for(std::chrono::milliseconds(1500));  
-  */
 
 
   return 0;
