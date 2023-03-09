@@ -14,7 +14,6 @@
 #include "GameScenes/Scene.h"
 #include "GameScenes/Playground.h"
 #include "GameScenes/Menu.h"
-#include "GameScenes/DeferredScene.h"
 
 
 #ifndef WIN32
@@ -45,7 +44,7 @@ int main()
   Renderer::SkyRenderer::init();
   Renderer::init();
 
-  SceneManager::switchToScene(std::make_unique<DeferredScene>());
+  SceneManager::switchToScene(std::make_unique<Playground>());
 
 
   //===========================================================//

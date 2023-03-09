@@ -55,13 +55,6 @@ private:
 	PheremonesManager* m_pManager;
 	World::PropsManager m_props;
 
-	Renderer::FrameBufferObject m_fbo;
-	Renderer::Texture m_depth = Renderer::Texture::createDepthTexture(Window::getWinWidth(), Window::getWinHeight());
-	Renderer::Texture m_target{ Window::getWinWidth(), Window::getWinHeight() };
-	Renderer::BlitPass m_depthblit{ "res/shaders/shadows_testblitdepth.fs" };
-
-	Renderer::FrameBufferObject m_fboNormal;
-	Renderer::Texture m_texNormal{ Window::getWinWidth(), Window::getWinHeight() };
 
 
 	Server::Client* m_client = nullptr; // might change if global state idk
@@ -71,8 +64,6 @@ public:
 
 	Playground() 
 	{
-		m_fbo.setTargetTexture(m_target);
-		m_fbo.setDepthTexture(m_depth);
 		
 		// Local server creation
 		{
@@ -150,7 +141,7 @@ public:
 
 		m_player.setPosition(glm::vec3{ 25 * 2, 0 , 25 * 2 });
 		m_player.setTile({ 2,2 });
-		m_useDbgPlayer = true;
+		m_useDbgPlayer = false;
 
 
 		
@@ -288,15 +279,13 @@ public:
 		};
 
 
-		m_fbo.bind();
+		m_pipeline.bind();
 		renderFn();
-		m_fbo.unbind();
+		m_pipeline.unbind();
 
-		m_fbo.getTarget()->bind();
-		Renderer::BlitPass{}.doBlit();
+		m_pipeline.renderPipeline();
 
 		
-		//m_pipeline.renderPipeline();
 
 		
 	}
@@ -304,18 +293,8 @@ public:
 	void onImGuiRender() override
 	{
 		ImGui::Text("This is the playground for tests ! ");
-		ImGui::Image(m_pipeline.getDepthTexture().getId(), { 16 * 30, 9 * 30 }, {0,1}, {1,0},{1,0,0,1});
-		ImGui::Image(m_fbo.getTarget()->getId(), { 16 * 30, 9 * 30 }, {0,1}, {1,0});
-		ImGui::Begin("Actual Scene");
-		ImGui::Image(m_pipeline.getTargetTexture().getId(), {16 * 30, 9 * 30}, {0,1}, {1,0});
-		ImGui::End();
+		
 
-		static float zfar = 1.f;
-		if (ImGui::DragFloat("zfar", &zfar, 0.5)) {
-			m_depthblit.getShader().bind();
-			m_depthblit.getShader().setUniform1f("u_zFar", zfar);
-			m_depthblit.getShader().unbind();
-		}
 		ImGui::Checkbox("Use debug player", &m_useDbgPlayer);
 		m_pipeline.onImGuiRender();
 		m_lights.onImguiRender();
